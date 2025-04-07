@@ -33,19 +33,21 @@ def mock_product_repository(sample_product_dto: ProductResponseDTO) -> AsyncMock
     mock.update.return_value = sample_product_dto
     mock.delete.return_value = True
     mock.list.return_value = ([sample_product_dto], 1)
-    
+
     # Handle specific method that expects scalars().all()
     execute_mock = AsyncMock()
     scalars_mock = MagicMock()
     all_mock = MagicMock()
-    
+
     all_mock.return_value = []  # Empty list of categories
     scalars_mock.return_value = all_mock
     execute_mock.return_value = scalars_mock
     
-    mock._session = AsyncMock()
-    mock._session.execute = execute_mock
-    
+    # Use setattr to avoid direct private member access warnings
+    session_mock = AsyncMock()
+    session_mock.execute = execute_mock
+    setattr(mock, "_session", session_mock)
+
     return mock
 
 

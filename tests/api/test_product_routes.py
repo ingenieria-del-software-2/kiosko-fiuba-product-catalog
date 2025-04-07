@@ -22,47 +22,53 @@ from src.products.domain.exceptions.domain_exceptions import ProductNotFoundErro
 
 class MockProductService:
     """Mock product service for testing."""
-    
-    def __init__(self, sample_product: ProductResponseDTO):
+
+    def __init__(self, sample_product: ProductResponseDTO) -> None:
         self.sample_product = sample_product
-        
+
     async def create_product(self, product_data: Any) -> ProductResponseDTO:
         """Mock create product method."""
         return self.sample_product
-        
+
     async def get_product_by_id(self, product_id: uuid.UUID) -> ProductResponseDTO:
         """Mock get product by ID method."""
         if str(product_id) == "00000000-0000-0000-0000-000000000000":
             raise ProductNotFoundError(product_id)
         return self.sample_product
-        
+
     async def get_product_by_sku(self, sku: str) -> ProductResponseDTO:
         """Mock get product by SKU method."""
         if sku == "NONEXISTENT-SKU":
             return None
         return self.sample_product
-        
-    async def update_product(self, product_id: uuid.UUID, product_data: Any) -> ProductResponseDTO:
+
+    async def update_product(
+        self, product_id: uuid.UUID, product_data: Any
+    ) -> ProductResponseDTO:
         """Mock update product method."""
         if str(product_id) == "00000000-0000-0000-0000-000000000000":
             raise ProductNotFoundError(product_id)
         return self.sample_product
-        
+
     async def delete_product(self, product_id: uuid.UUID) -> bool:
         """Mock delete product method."""
         if str(product_id) == "00000000-0000-0000-0000-000000000000":
             raise ProductNotFoundError(product_id)
         return True
-        
+
     async def get_products(self, filters: ProductFilterDTO) -> List[ProductResponseDTO]:
         """Mock get products method."""
         return [self.sample_product]
-        
-    async def get_products_by_category(self, category_id: uuid.UUID) -> List[ProductResponseDTO]:
+
+    async def get_products_by_category(
+        self, category_id: uuid.UUID
+    ) -> List[ProductResponseDTO]:
         """Mock get products by category method."""
         return [self.sample_product]
-        
-    async def list_products(self, filters: ProductFilterDTO) -> tuple[List[ProductResponseDTO], int]:
+
+    async def list_products(
+        self, filters: ProductFilterDTO
+    ) -> tuple[List[ProductResponseDTO], int]:
         """Mock list products method."""
         return [self.sample_product], 1
 
@@ -173,13 +179,13 @@ def mock_product_service(sample_product_dto: ProductResponseDTO) -> ProductServi
 def app(mock_product_service: ProductService) -> FastAPI:
     """Create a test FastAPI app with mocked dependencies."""
     from src.api.app import get_app
-    
+
     app = get_app()
-    
+
     from src.api.routes.products import get_product_service
-    
+
     app.dependency_overrides[get_product_service] = lambda: mock_product_service
-    
+
     return app
 
 
@@ -276,7 +282,10 @@ def test_update_product_success(
 ) -> None:
     """Test successfully updating a product."""
     product_id = str(sample_product_dto.id)
-    response = client.put(f"/api/products/{product_id}", json=sample_product_update_request)
+    response = client.put(
+        f"/api/products/{product_id}", 
+        json=sample_product_update_request
+    )
 
     # Verify the response
     assert response.status_code == 200
@@ -291,7 +300,10 @@ def test_update_product_not_found(
 ) -> None:
     """Test updating a non-existent product."""
     product_id = "00000000-0000-0000-0000-000000000000"
-    response = client.put(f"/api/products/{product_id}", json=sample_product_update_request)
+    response = client.put(
+        f"/api/products/{product_id}", 
+        json=sample_product_update_request
+    )
 
     # Verify the response
     assert response.status_code == 404
