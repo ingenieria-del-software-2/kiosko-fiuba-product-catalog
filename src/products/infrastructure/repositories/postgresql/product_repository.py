@@ -53,19 +53,19 @@ class PostgreSQLProductRepository(ProductRepository):
             summary=product_dto.summary,
             price_amount=product_dto.price,
             price_currency=product_dto.currency,
-            compare_at_price=product_dto.compareAtPrice,
+            compare_at_price=product_dto.compare_at_price,
             brand_id=product_dto.brand_id,
             model=product_dto.model,
             sku=product_dto.sku,
             stock=product_dto.stock,
-            is_available=product_dto.isAvailable,
-            is_new=product_dto.isNew,
-            is_refurbished=product_dto.isRefurbished,
+            is_available=product_dto.is_available,
+            is_new=product_dto.is_new,
+            is_refurbished=product_dto.is_refurbished,
             condition=product_dto.condition,
-            has_variants=product_dto.hasVariants,
+            has_variants=product_dto.has_variants,
             tags=product_dto.tags,
             attributes=product_dto.attributes,
-            highlighted_features=product_dto.highlightedFeatures,
+            highlighted_features=product_dto.highlighted_features,
             shipping=product_dto.shipping,
             warranty=product_dto.warranty,
         )
@@ -87,7 +87,7 @@ class PostgreSQLProductRepository(ProductRepository):
                     product_id=product_model.id,
                     url=image_data["url"],
                     alt=image_data.get("alt"),
-                    is_main=image_data.get("isMain", False),
+                    is_main=image_data.get("is_main", False),
                     order=image_data.get("order", 0),
                 )
                 self._session.add(image)
@@ -101,10 +101,10 @@ class PostgreSQLProductRepository(ProductRepository):
                     sku=variant_data["sku"],
                     price_amount=variant_data["price"],
                     price_currency=product_dto.currency,
-                    compare_at_price=variant_data.get("compareAtPrice"),
+                    compare_at_price=variant_data.get("compare_at_price"),
                     stock=variant_data.get("stock", 0),
-                    is_available=variant_data.get("isAvailable", True),
-                    is_selected=variant_data.get("isSelected", False),
+                    is_available=variant_data.get("is_available", True),
+                    is_selected=variant_data.get("is_selected", False),
                     attributes=variant_data.get("attributes", {}),
                 )
                 self._session.add(variant)
@@ -116,14 +116,14 @@ class PostgreSQLProductRepository(ProductRepository):
                             product_id=product_model.id,
                             url=v_image_data["url"],
                             alt=v_image_data.get("alt"),
-                            is_main=v_image_data.get("isMain", False),
+                            is_main=v_image_data.get("is_main", False),
                             order=v_image_data.get("order", 0),
                         )
                         self._session.add(v_image)
 
         # Add config options
-        if product_dto.configOptions:
-            for config_data in product_dto.configOptions:
+        if product_dto.config_options:
+            for config_data in product_dto.config_options:
                 config = ConfigOptionModel(
                     product_id=product_model.id,
                     name=config_data["name"],
@@ -419,7 +419,7 @@ class PostgreSQLProductRepository(ProductRepository):
                     product_id=product_model.id,
                     url=image_data["url"],
                     alt=image_data.get("alt"),
-                    is_main=image_data.get("isMain", False),
+                    is_main=image_data.get("is_main", False),
                     order=image_data.get("order", 0),
                 )
                 self._session.add(image)
@@ -454,10 +454,10 @@ class PostgreSQLProductRepository(ProductRepository):
                     sku=variant_data["sku"],
                     price_amount=variant_data["price"],
                     price_currency=product_model.price_currency,
-                    compare_at_price=variant_data.get("compareAtPrice"),
+                    compare_at_price=variant_data.get("compare_at_price"),
                     stock=variant_data.get("stock", 0),
-                    is_available=variant_data.get("isAvailable", True),
-                    is_selected=variant_data.get("isSelected", False),
+                    is_available=variant_data.get("is_available", True),
+                    is_selected=variant_data.get("is_selected", False),
                     attributes=variant_data.get("attributes", {}),
                 )
                 self._session.add(variant)
@@ -731,7 +731,7 @@ class PostgreSQLProductRepository(ProductRepository):
             "description": model.description,
             "summary": model.summary,
             "price": float(model.price_amount),
-            "compareAtPrice": (
+            "compare_at_price": (
                 float(model.compare_at_price) if model.compare_at_price else None
             ),
             "currency": model.price_currency,
@@ -739,21 +739,21 @@ class PostgreSQLProductRepository(ProductRepository):
             "model": model.model,
             "sku": model.sku,
             "stock": model.stock,
-            "isAvailable": model.is_available,
-            "isNew": model.is_new,
-            "isRefurbished": model.is_refurbished,
+            "is_available": model.is_available,
+            "is_new": model.is_new,
+            "is_refurbished": model.is_refurbished,
             "condition": model.condition,
             "categories": categories,
             "tags": model.tags,
             "images": images,
             "attributes": model.attributes,
-            "hasVariants": model.has_variants,
+            "has_variants": model.has_variants,
             "variants": variants,
-            "configOptions": config_options,
+            "config_options": config_options,
             "shipping": model.shipping,
             "warranty": model.warranty,
             "reviews": reviews,
-            "highlightedFeatures": model.highlighted_features,
+            "highlighted_features": model.highlighted_features,
             "created_at": model.created_at,
             "updated_at": model.updated_at,
         }
@@ -805,7 +805,7 @@ class PostgreSQLProductRepository(ProductRepository):
                         "id": str(image.id),
                         "url": image.url,
                         "alt": image.alt,
-                        "isMain": image.is_main,
+                        "is_main": image.is_main,
                         "order": image.order,
                     },
                 )
@@ -831,15 +831,15 @@ class PostgreSQLProductRepository(ProductRepository):
                     "sku": variant.sku,
                     "name": variant.name,
                     "price": float(variant.price_amount),
-                    "compareAtPrice": (
+                    "compare_at_price": (
                         float(variant.compare_at_price)
                         if variant.compare_at_price
                         else None
                     ),
                     "attributes": variant.attributes,
                     "stock": variant.stock,
-                    "isAvailable": variant.is_available,
-                    "isSelected": variant.is_selected,
+                    "is_available": variant.is_available,
+                    "is_selected": variant.is_selected,
                 }
                 result.append(variant_data)
         return result
