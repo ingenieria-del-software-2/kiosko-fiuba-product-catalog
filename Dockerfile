@@ -11,8 +11,8 @@ RUN poetry config virtualenvs.create false
 RUN poetry config cache-dir /tmp/poetry_cache
 
 # Copying requirements of a project
-COPY pyproject.toml poetry.lock /app/src/
-WORKDIR /app/src
+COPY pyproject.toml poetry.lock /app/
+WORKDIR /app
 
 # Installing requirements
 RUN --mount=type=cache,target=/tmp/poetry_cache poetry install --only main
@@ -22,10 +22,10 @@ RUN apt-get purge -y \
   && rm -rf /var/lib/apt/lists/*
 
 # Copying actuall application
-COPY . /app/src/
+COPY . /app/
 RUN --mount=type=cache,target=/tmp/poetry_cache poetry install --only main
 
-CMD ["/usr/local/bin/python", "-m", "product_catalog"]
+CMD ["/usr/local/bin/python", "-m", "src"]
 
 FROM prod AS dev
 

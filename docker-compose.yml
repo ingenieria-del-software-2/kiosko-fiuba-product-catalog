@@ -3,17 +3,17 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    image: product_catalog:${PRODUCT_CATALOG_VERSION:-latest}
+    image: mercado_libre_clone:${MERCADO_LIBRE_VERSION:-latest}
     restart: always
     env_file:
       - .env
     labels:
       # Enables traefik for this container.
       - traefik.enable=true
-      - traefik.http.routers.product_catalog.rule=Host(`${PRODUCT_CATALOG_TRAEFIK_HOST:-product_catalog.localhost}`)
-      - traefik.http.routers.product_catalog.entrypoints=http
-      - traefik.http.routers.product_catalog.service=product_catalog
-      - traefik.http.services.product_catalog.loadbalancer.server.port=${PRODUCT_CATALOG_PORT:-8000}
+      - traefik.http.routers.mercado_libre.rule=Host(`${MERCADO_LIBRE_TRAEFIK_HOST:-mercado_libre.localhost}`)
+      - traefik.http.routers.mercado_libre.entrypoints=http
+      - traefik.http.routers.mercado_libre.service=mercado_libre
+      - traefik.http.services.mercado_libre.loadbalancer.server.port=${MERCADO_LIBRE_PORT:-8000}
     ports:
       - "8000:8000"
     networks:
@@ -23,48 +23,50 @@ services:
       db:
         condition: service_healthy
     environment:
-      PRODUCT_CATALOG_HOST: 0.0.0.0
-      PRODUCT_CATALOG_DB_HOST: product_catalog-db
-      PRODUCT_CATALOG_DB_PORT: 5432
-      PRODUCT_CATALOG_DB_USER: product_catalog
-      PRODUCT_CATALOG_DB_PASS: product_catalog
-      PRODUCT_CATALOG_DB_BASE: product_catalog
+      MERCADO_LIBRE_HOST: 0.0.0.0
+      MERCADO_LIBRE_DB_HOST: mercado-libre-db
+      MERCADO_LIBRE_DB_PORT: 5432
+      MERCADO_LIBRE_DB_USER: mercado_libre
+      MERCADO_LIBRE_DB_PASS: mercado_libre
+      MERCADO_LIBRE_DB_BASE: mercado_libre
+    volumes:
+      - ./src:/app/src
 
   db:
     image: postgres:16.3-bullseye
-    hostname: product_catalog-db
+    hostname: mercado-libre-db
     environment:
-      POSTGRES_PASSWORD: "product_catalog"
-      POSTGRES_USER: "product_catalog"
-      POSTGRES_DB: "product_catalog"
+      POSTGRES_PASSWORD: "mercado_libre"
+      POSTGRES_USER: "mercado_libre"
+      POSTGRES_DB: "mercado_libre"
     volumes:
-      - product_catalog-db-data:/var/lib/postgresql/data
+      - mercado-libre-db-data:/var/lib/postgresql/data
     restart: always
     healthcheck:
-      test: pg_isready -U product_catalog
+      test: pg_isready -U mercado_libre
       interval: 2s
       timeout: 3s
       retries: 40
 
   migrator:
-    image: product_catalog:${PRODUCT_CATALOG_VERSION:-latest}
+    image: mercado_libre_clone:${MERCADO_LIBRE_VERSION:-latest}
     restart: "no"
     command: alembic upgrade head
     environment:
-      PRODUCT_CATALOG_DB_HOST: product_catalog-db
-      PRODUCT_CATALOG_DB_PORT: 5432
-      PRODUCT_CATALOG_DB_USER: product_catalog
-      PRODUCT_CATALOG_DB_PASS: product_catalog
-      PRODUCT_CATALOG_DB_BASE: product_catalog
+      MERCADO_LIBRE_DB_HOST: mercado-libre-db
+      MERCADO_LIBRE_DB_PORT: 5432
+      MERCADO_LIBRE_DB_USER: mercado_libre
+      MERCADO_LIBRE_DB_PASS: mercado_libre
+      MERCADO_LIBRE_DB_BASE: mercado_libre
     depends_on:
       db:
         condition: service_healthy
-
-
+    volumes:
+      - ./src:/app/src
 
 volumes:
-  product_catalog-db-data:
-    name: product_catalog-db-data
+  mercado-libre-db-data:
+    name: mercado-libre-db-data
 
 networks:
   # Network for traefik.

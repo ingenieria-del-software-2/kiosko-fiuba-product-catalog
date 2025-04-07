@@ -1,0 +1,1 @@
+"""Console event publisher package."""
