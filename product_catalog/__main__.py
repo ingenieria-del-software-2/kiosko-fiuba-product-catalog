@@ -8,7 +8,7 @@ def main() -> None:
     """Entrypoint of the application."""
     if settings.reload:
         uvicorn.run(
-            "product_catalog.web.application:get_app",
+            "product_catalog.api.app:get_app",
             workers=settings.workers_count,
             host=settings.host,
             port=settings.port,
@@ -21,7 +21,7 @@ def main() -> None:
         # option is not used, because reload
         # feature doesn't work with gunicorn workers.
         GunicornApplication(
-            "product_catalog.web.application:get_app",
+            "product_catalog.api.app:get_app",
             host=settings.host,
             port=settings.port,
             workers=settings.workers_count,

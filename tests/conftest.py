@@ -10,10 +10,8 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from product_catalog.api.app import get_app
 from product_catalog.db.dependencies import get_db_session
-from product_catalog.db.utils import create_database, drop_database
-from product_catalog.settings import settings
-from product_catalog.web.application import get_app
 
 
 @pytest.fixture(scope="session")
@@ -38,17 +36,20 @@ async def _engine() -> AsyncGenerator[AsyncEngine, None]:
 
     load_all_models()
 
-    await create_database()
-
-    engine = create_async_engine(str(settings.db_url))
-    async with engine.begin() as conn:
-        await conn.run_sync(meta.create_all)
+    # Use SQLite for tests
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
 
     try:
+        # Create tables
+        async with engine.begin() as conn:
+            await conn.run_sync(meta.create_all)
+
         yield engine
     finally:
+        # Drop tables on cleanup
+        async with engine.begin() as conn:
+            await conn.run_sync(meta.drop_all)
         await engine.dispose()
-        await drop_database()
 
 
 @pytest.fixture
