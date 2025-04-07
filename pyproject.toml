@@ -27,6 +27,7 @@ alembic = "^1.14.0"
 asyncpg = {version = "^0.30.0", extras = ["sa"]}
 httptools = "^0.6.4"
 pymongo = "^4.10.1"
+python-slugify = "^8.0.4"
 
 
 [tool.poetry.group.dev.dependencies]
