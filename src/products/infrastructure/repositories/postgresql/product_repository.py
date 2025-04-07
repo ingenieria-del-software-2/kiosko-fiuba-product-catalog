@@ -1,8 +1,8 @@
-"""Implementation of a ProductRepository using PostgreSQL."""
+"""PostgreSQL product repository implementation."""
 
 import uuid
 from datetime import datetime
-from typing import Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +14,9 @@ from src.products.application.dtos.product_dtos import (
     ProductUpdateDTO,
 )
 from src.products.domain.entities.product import Product
-from src.products.domain.repositories.product_repository import ProductRepository
+from src.products.domain.repositories.product_repository import (
+    ProductRepository,
+)
 from src.products.infrastructure.repositories.postgresql.models import (
     CategoryModel,
     ConfigOptionModel,
@@ -26,10 +28,10 @@ from src.products.infrastructure.repositories.postgresql.models import (
 
 
 class PostgreSQLProductRepository(ProductRepository):
-    """PostgreSQL implementation of ProductRepository."""
+    """PostgreSQL implementation of the ProductRepository interface."""
 
     def __init__(self, session: AsyncSession) -> None:
-        """Initialize repository with database session.
+        """Initialize the repository.
 
         Args:
             session: SQLAlchemy async session
@@ -73,6 +75,7 @@ class PostgreSQLProductRepository(ProductRepository):
         self._session.add(product_model)
 
         # Add categories
+        categories: List[CategoryModel] = []
         if product_dto.category_ids:
             stmt = select(CategoryModel).where(
                 CategoryModel.id.in_(product_dto.category_ids),
@@ -80,23 +83,28 @@ class PostgreSQLProductRepository(ProductRepository):
             categories = (await self._session.execute(stmt)).scalars().all()
             product_model.categories = categories
 
-        # Add images
+        # Flush to get product ID
+        await self._session.flush()
+
+        # Add images after the product has an ID
+        product_images = []
         if product_dto.images:
             for image_data in product_dto.images:
                 image = ProductImageModel(
-                    product_id=product_model.id,
+                    product_id=product_model.id,  # Set product_id explicitly
                     url=image_data["url"],
                     alt=image_data.get("alt"),
-                    is_main=image_data.get("is_main", False),
+                    is_main=image_data.get("isMain", False),
                     order=image_data.get("order", 0),
                 )
                 self._session.add(image)
+                product_images.append(image)
 
         # Add variants
         if product_dto.variants:
             for variant_data in product_dto.variants:
                 variant = ProductVariantModel(
-                    parent_product_id=product_model.id,
+                    parent_product_id=product_model.id,  # Parent product reference
                     name=variant_data["name"],
                     sku=variant_data["sku"],
                     price_amount=variant_data["price"],
@@ -109,14 +117,18 @@ class PostgreSQLProductRepository(ProductRepository):
                 )
                 self._session.add(variant)
 
+                # Flush to get variant ID
+                await self._session.flush()
+
                 # Add variant images if they exist
                 if variant_data.get("images"):
                     for v_image_data in variant_data["images"]:
                         v_image = ProductImageModel(
-                            product_id=product_model.id,
+                            product_id=product_model.id,  # Set product_id explicitly
+                            variant_id=variant.id,  # Set variant_id explicitly
                             url=v_image_data["url"],
                             alt=v_image_data.get("alt"),
-                            is_main=v_image_data.get("is_main", False),
+                            is_main=v_image_data.get("isMain", False),
                             order=v_image_data.get("order", 0),
                         )
                         self._session.add(v_image)
@@ -125,15 +137,32 @@ class PostgreSQLProductRepository(ProductRepository):
         if product_dto.config_options:
             for config_data in product_dto.config_options:
                 config = ConfigOptionModel(
-                    product_id=product_model.id,
+                    product_id=product_model.id,  # Set product_id explicitly
                     name=config_data["name"],
                     values=config_data["values"],
                 )
                 self._session.add(config)
 
+        # Ensure all data is saved to the database
         await self._session.flush()
 
-        # Convert to domain entity
+        # Reload product with relationships to avoid lazy loading issues
+        stmt = (
+            select(ProductModel)
+            .options(
+                selectinload(ProductModel.categories),
+                selectinload(ProductModel.images),
+                selectinload(ProductModel.variants).selectinload(
+                    ProductVariantModel.images,
+                ),
+                joinedload(ProductModel.brand),
+            )
+            .where(ProductModel.id == product_model.id)
+        )
+
+        result = await self._session.execute(stmt)
+        product_model = result.scalars().first()
+
         return await self._to_domain_entity(product_model)
 
     async def get_by_id(self, product_id: uuid.UUID) -> Optional[Product]:
@@ -150,9 +179,9 @@ class PostgreSQLProductRepository(ProductRepository):
             .options(
                 selectinload(ProductModel.categories),
                 selectinload(ProductModel.images),
-                selectinload(ProductModel.variants),
-                selectinload(ProductModel.config_options),
-                selectinload(ProductModel.reviews),
+                selectinload(ProductModel.variants).selectinload(
+                    ProductVariantModel.images,
+                ),
                 joinedload(ProductModel.brand),
             )
             .where(ProductModel.id == product_id)
@@ -180,9 +209,9 @@ class PostgreSQLProductRepository(ProductRepository):
             .options(
                 selectinload(ProductModel.categories),
                 selectinload(ProductModel.images),
-                selectinload(ProductModel.variants),
-                selectinload(ProductModel.config_options),
-                selectinload(ProductModel.reviews),
+                selectinload(ProductModel.variants).selectinload(
+                    ProductVariantModel.images,
+                ),
                 joinedload(ProductModel.brand),
             )
             .where(ProductModel.sku == sku)
@@ -242,8 +271,9 @@ class PostgreSQLProductRepository(ProductRepository):
             .options(
                 selectinload(ProductModel.categories),
                 selectinload(ProductModel.images),
-                selectinload(ProductModel.variants),
-                selectinload(ProductModel.config_options),
+                selectinload(ProductModel.variants).selectinload(
+                    ProductVariantModel.images,
+                ),
             )
             .where(ProductModel.id == product_id)
         )
@@ -715,15 +745,52 @@ class PostgreSQLProductRepository(ProductRepository):
         Returns:
             Product domain entity
         """
-        # Build component dictionaries
-        categories = self._prepare_categories(model.categories)
-        images = self._prepare_images(model.images)
-        variants = self._prepare_variants(model.variants)
-        config_options = self._prepare_config_options(model.config_options)
-        reviews = self._prepare_reviews(model.reviews)
-        brand = self._prepare_brand(model.brand)
+        # Prepare data dictionaries for relationships without lazy loading
+        categories_data = []
+        # Don't use hasattr, use getattr with default value to avoid lazy loading
+        categories = getattr(model, "categories", None)
+        if categories is not None:
+            for category in categories:
+                categories_data.append(
+                    {
+                        "id": category.id,
+                        "name": category.name,
+                        "slug": category.slug,
+                        "description": category.description,
+                    },
+                )
 
-        # Build product data dictionary
+        images_data = []
+        # Don't use hasattr, use getattr with default value to avoid lazy loading
+        images = getattr(model, "images", None)
+        if images is not None:
+            for image in images:
+                images_data.append(
+                    {
+                        "id": image.id,
+                        "url": image.url,
+                        "alt": image.alt,
+                        "is_main": image.is_main,
+                        "order": image.order,
+                    },
+                )
+
+        brand_data = None
+        # Don't use hasattr, use getattr with default value to avoid lazy loading
+        brand = getattr(model, "brand", None)
+        if brand is not None:
+            brand_data = {
+                "id": brand.id,
+                "name": brand.name,
+                "logo": brand.logo,
+                "description": brand.description,
+            }
+
+        reviews_data: List[Dict[str, Any]] = []
+        # Skip reviews altogether if not explicitly loaded
+        # Don't use hasattr or getattr which would trigger lazy loading
+
+        # Build product data dictionary with extracted data
         product_data = {
             "id": model.id,
             "name": model.name,
@@ -735,7 +802,7 @@ class PostgreSQLProductRepository(ProductRepository):
                 float(model.compare_at_price) if model.compare_at_price else None
             ),
             "currency": model.price_currency,
-            "brand": brand,
+            "brand": brand_data,
             "model": model.model,
             "sku": model.sku,
             "stock": model.stock,
@@ -743,17 +810,13 @@ class PostgreSQLProductRepository(ProductRepository):
             "is_new": model.is_new,
             "is_refurbished": model.is_refurbished,
             "condition": model.condition,
-            "categories": categories,
+            "categories": categories_data,
             "tags": model.tags,
-            "images": images,
+            "images": images_data,
             "attributes": model.attributes,
             "has_variants": model.has_variants,
-            "variants": variants,
-            "config_options": config_options,
-            "shipping": model.shipping,
-            "warranty": model.warranty,
-            "reviews": reviews,
             "highlighted_features": model.highlighted_features,
+            "reviews": reviews_data,
             "created_at": model.created_at,
             "updated_at": model.updated_at,
         }
