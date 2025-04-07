@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "mercado_libre_clone"
+name = "product_catalog"
 version = "0.1.0"
-description = "Mercado Libre Clone - Product Catalog"
+description = "Product Catalog for Mercado Libre Clone"
 authors = [
 
 ]
@@ -63,8 +63,8 @@ filterwarnings = [
     "ignore:.*unclosed.*:ResourceWarning",
 ]
 env = [
-    "MERCADO_LIBRE_ENVIRONMENT=pytest",
-    "MERCADO_LIBRE_DB_BASE=mercado_libre_test",
+    "PRODUCT_CATALOG_ENVIRONMENT=pytest",
+    "PRODUCT_CATALOG_DB_BASE=mercado_libre_test",
 ]
 
 [tool.ruff]
@@ -134,7 +134,7 @@ allow-magic-value-types = ["int", "str", "float", "bytes"]
 
 
 [fastapi-template.options]
-project_name = "mercado_libre_clone"
+project_name = "product_catalog"
 api_type = "rest"
 enable_redis = "None"
 enable_rmq = "None"

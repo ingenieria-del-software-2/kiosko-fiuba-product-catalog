@@ -18,8 +18,8 @@ def get_app() -> FastAPI:
     :return: application.
     """
     app = FastAPI(
-        title="mercado_libre_clone",
-        version=metadata.version("mercado_libre_clone"),
+        title="product_catalog",
+        version=metadata.version("product_catalog"),
         lifespan=lifespan,
         docs_url="/api/docs",
         redoc_url="/api/redoc",

@@ -64,7 +64,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_file=".env",
-        env_prefix="MERCADO_LIBRE_",
+        env_prefix="PRODUCT_CATALOG_",
         env_file_encoding="utf-8",
     )
 

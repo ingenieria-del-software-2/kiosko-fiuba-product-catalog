@@ -3,17 +3,17 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    image: mercado_libre_clone:${MERCADO_LIBRE_VERSION:-latest}
+    image: product_catalog:${PRODUCT_CATALOG_VERSION:-latest}
     restart: always
     env_file:
       - .env
     labels:
       # Enables traefik for this container.
       - traefik.enable=true
-      - traefik.http.routers.mercado_libre.rule=Host(`${MERCADO_LIBRE_TRAEFIK_HOST:-mercado_libre.localhost}`)
+      - traefik.http.routers.mercado_libre.rule=Host(`${PRODUCT_CATALOG_TRAEFIK_HOST:-mercado_libre.localhost}`)
       - traefik.http.routers.mercado_libre.entrypoints=http
       - traefik.http.routers.mercado_libre.service=mercado_libre
-      - traefik.http.services.mercado_libre.loadbalancer.server.port=${MERCADO_LIBRE_PORT:-8000}
+      - traefik.http.services.mercado_libre.loadbalancer.server.port=${PRODUCT_CATALOG_PORT:-8000}
     ports:
       - "8000:8000"
     networks:
@@ -23,12 +23,12 @@ services:
       db:
         condition: service_healthy
     environment:
-      MERCADO_LIBRE_HOST: 0.0.0.0
-      MERCADO_LIBRE_DB_HOST: mercado-libre-db
-      MERCADO_LIBRE_DB_PORT: 5432
-      MERCADO_LIBRE_DB_USER: mercado_libre
-      MERCADO_LIBRE_DB_PASS: mercado_libre
-      MERCADO_LIBRE_DB_BASE: mercado_libre
+      PRODUCT_CATALOG_HOST: 0.0.0.0
+      PRODUCT_CATALOG_DB_HOST: mercado-libre-db
+      PRODUCT_CATALOG_DB_PORT: 5432
+      PRODUCT_CATALOG_DB_USER: mercado_libre
+      PRODUCT_CATALOG_DB_PASS: mercado_libre
+      PRODUCT_CATALOG_DB_BASE: mercado_libre
     volumes:
       - ./src:/app/src
 
@@ -49,15 +49,15 @@ services:
       retries: 40
 
   migrator:
-    image: mercado_libre_clone:${MERCADO_LIBRE_VERSION:-latest}
+    image: product_catalog:${PRODUCT_CATALOG_VERSION:-latest}
     restart: "no"
     command: alembic upgrade head
     environment:
-      MERCADO_LIBRE_DB_HOST: mercado-libre-db
-      MERCADO_LIBRE_DB_PORT: 5432
-      MERCADO_LIBRE_DB_USER: mercado_libre
-      MERCADO_LIBRE_DB_PASS: mercado_libre
-      MERCADO_LIBRE_DB_BASE: mercado_libre
+      PRODUCT_CATALOG_DB_HOST: mercado-libre-db
+      PRODUCT_CATALOG_DB_PORT: 5432
+      PRODUCT_CATALOG_DB_USER: mercado_libre
+      PRODUCT_CATALOG_DB_PASS: mercado_libre
+      PRODUCT_CATALOG_DB_BASE: mercado_libre
     depends_on:
       db:
         condition: service_healthy

@@ -1,1 +1,0 @@
-"""Event publisher interfaces package."""
