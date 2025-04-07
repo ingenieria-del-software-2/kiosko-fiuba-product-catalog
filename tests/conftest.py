@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from product_catalog.api.app import get_app
-from product_catalog.db.dependencies import get_db_session
+from product_catalog.infrastructure.database.dependencies import get_db_session
 
 
 @pytest.fixture(scope="session")
@@ -31,9 +31,10 @@ async def _engine() -> AsyncGenerator[AsyncEngine, None]:
 
     :yield: new engine.
     """
-    from product_catalog.db.meta import meta
-    from product_catalog.db.models import load_all_models
+    from product_catalog.infrastructure.database.base import Base
+    from product_catalog.infrastructure.database.models import load_all_models
 
+    # Load models first
     load_all_models()
 
     # Use SQLite for tests
@@ -42,13 +43,13 @@ async def _engine() -> AsyncGenerator[AsyncEngine, None]:
     try:
         # Create tables
         async with engine.begin() as conn:
-            await conn.run_sync(meta.create_all)
+            await conn.run_sync(Base.metadata.create_all)
 
         yield engine
     finally:
         # Drop tables on cleanup
         async with engine.begin() as conn:
-            await conn.run_sync(meta.drop_all)
+            await conn.run_sync(Base.metadata.drop_all)
         await engine.dispose()
 
 

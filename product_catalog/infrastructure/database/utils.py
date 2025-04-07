@@ -1,3 +1,5 @@
+"""Database utilities."""
+
 from sqlalchemy import text
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -6,7 +8,11 @@ from product_catalog.settings import settings
 
 
 async def create_database() -> None:
-    """Create a database."""
+    """
+    Create a database.
+    
+    This function creates a new PostgreSQL database if it doesn't exist.
+    """
     db_url = make_url(str(settings.db_url.with_path("/postgres")))
     engine = create_async_engine(db_url, isolation_level="AUTOCOMMIT")
 
@@ -30,7 +36,11 @@ async def create_database() -> None:
 
 
 async def drop_database() -> None:
-    """Drop current database."""
+    """
+    Drop current database.
+    
+    This function drops the current PostgreSQL database if it exists.
+    """
     db_url = make_url(str(settings.db_url.with_path("/postgres")))
     engine = create_async_engine(db_url, isolation_level="AUTOCOMMIT")
     async with engine.connect() as conn:

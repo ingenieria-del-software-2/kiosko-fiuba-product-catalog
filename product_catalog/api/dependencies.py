@@ -4,7 +4,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from product_catalog.application.services.dummy_service import DummyService
-from product_catalog.db.dependencies import get_db_session
+from product_catalog.infrastructure.database.dependencies import get_db_session
 from product_catalog.infrastructure.event_publisher.console.console_publisher import (
     ConsoleEventPublisher,
 )

@@ -1,11 +1,13 @@
+"""SQLAlchemy model for Dummy entity."""
+
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
-from product_catalog.db.base import Base
+from product_catalog.infrastructure.database.base import Base
 
 
 class DummyModel(Base):
-    """Model for demo purpose."""
+    """Database model for Dummy entity."""
 
     __tablename__ = "dummy_model"
 

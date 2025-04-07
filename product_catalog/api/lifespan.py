@@ -6,7 +6,7 @@ from typing import AsyncGenerator
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from product_catalog.db.models import load_all_models
+from product_catalog.infrastructure.database.models import load_all_models
 from product_catalog.settings import settings
 
 
