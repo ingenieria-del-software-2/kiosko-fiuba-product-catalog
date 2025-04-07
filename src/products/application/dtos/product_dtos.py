@@ -419,7 +419,7 @@ class ProductCreateDTO(BaseModel):
     def set_slug(cls, v: Optional[str], info: ValidationInfo) -> str:
         """Set slug from name if not provided."""
         if not v and "name" in info.data:
-            from slugify import slugify
+            from python_slugify import slugify
 
             return str(slugify(info.data["name"]))
         return v if v is not None else ""
@@ -498,7 +498,7 @@ class CategoryCreateDTO(BaseModel):
     def set_slug(cls, v: Optional[str], info: ValidationInfo) -> str:
         """Set slug from name if not provided."""
         if not v and "name" in info.data:
-            from slugify import slugify
+            from python_slugify import slugify
 
             return str(slugify(info.data["name"]))
         return v if v is not None else ""

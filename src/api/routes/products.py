@@ -24,7 +24,6 @@ from src.shared.database.dependencies import get_db_session
 from src.shared.event_publisher.console_publisher import ConsoleEventPublisher
 
 router = APIRouter(
-    prefix="/products",
     tags=["Products"],
 )
 
@@ -165,6 +164,11 @@ async def update_product(
         HTTPException: If product not found
     """
     # Convert camelCase to snake_case for fields that need adjustment
+    # Ensure slug is set
+    if not product_data.slug and product_data.name:
+        from python_slugify import slugify
+
+        product_data.slug = slugify(product_data.name)
     if hasattr(product_data, "compareAtPrice"):
         product_data.compare_at_price = product_data.compareAtPrice  # type: ignore
     if hasattr(product_data, "isAvailable"):
