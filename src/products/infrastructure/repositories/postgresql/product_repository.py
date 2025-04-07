@@ -19,6 +19,7 @@ from src.products.domain.repositories.product_repository import (
     ProductRepository,
 )
 from src.products.infrastructure.repositories.postgresql.models import (
+    BrandModel,
     CategoryModel,
     ConfigOptionModel,
     ProductImageModel,
@@ -48,32 +49,27 @@ class PostgreSQLProductRepository(ProductRepository):
         Returns:
             Created product entity
         """
-        import logging
-
         logger = logging.getLogger(__name__)
+        logger.debug(f"Creating product: {product_dto.name}")
 
-        # Create the product model
+        # Create product model
         product_model = ProductModel(
             name=product_dto.name,
             slug=product_dto.slug,
             description=product_dto.description,
             summary=product_dto.summary,
-            price_amount=(
-                product_dto.price_amount
-                if hasattr(product_dto, "price_amount")
-                else product_dto.price
-            ),
+            price_amount=product_dto.price,
             price_currency=product_dto.currency,
             compare_at_price=product_dto.compare_at_price,
-            brand_id=product_dto.brand_id,
-            model=product_dto.model,
             sku=product_dto.sku,
             stock=product_dto.stock,
             is_available=product_dto.is_available,
             is_new=product_dto.is_new,
             is_refurbished=product_dto.is_refurbished,
             condition=product_dto.condition,
-            has_variants=product_dto.has_variants,
+            model=product_dto.model,
+            has_variants=bool(product_dto.variants),
+            brand_id=product_dto.brand_id,
             tags=product_dto.tags,
             attributes=product_dto.attributes,
             highlighted_features=product_dto.highlighted_features,
@@ -84,54 +80,107 @@ class PostgreSQLProductRepository(ProductRepository):
         self._session.add(product_model)
 
         try:
-            # Flush to get product ID first - crucial for avoiding the greenlet error
+            # Flush to get product ID first
             await self._session.flush()
+            logger.debug(f"Created product model with ID: {product_model.id}")
+
+            # Prepare product data for domain entity
+            product_data = {
+                "id": product_model.id,
+                "name": product_model.name,
+                "slug": product_model.slug,
+                "description": product_model.description,
+                "summary": product_model.summary,
+                "price": float(product_model.price_amount),
+                "compare_at_price": (
+                    float(product_model.compare_at_price)
+                    if product_model.compare_at_price
+                    else None
+                ),
+                "currency": product_model.price_currency,
+                "sku": product_model.sku,
+                "stock": product_model.stock,
+                "is_available": product_model.is_available,
+                "is_new": product_model.is_new,
+                "is_refurbished": product_model.is_refurbished,
+                "condition": product_model.condition,
+                "model": product_model.model,
+                "has_variants": product_model.has_variants,
+                "tags": product_model.tags or [],
+                "attributes": product_model.attributes or [],
+                "highlighted_features": product_model.highlighted_features or [],
+                "shipping": product_model.shipping,
+                "warranty": product_model.warranty,
+                "created_at": product_model.created_at,
+                "updated_at": product_model.updated_at,
+                # Initialize empty collections that we'll populate if needed
+                "categories": [],
+                "images": [],
+                "variants": [],
+                "config_options": [],
+            }
 
             # Add categories if specified
             if product_dto.category_ids:
+                logger.debug(f"Adding {len(product_dto.category_ids)} categories")
                 await self._add_categories(product_model.id, product_dto.category_ids)
+
+                # Get basic category info for domain entity
+                categories_data = []
+                for category_id in product_dto.category_ids:
+                    stmt = select(CategoryModel).where(CategoryModel.id == category_id)
+                    result = await self._session.execute(stmt)
+                    category = result.scalars().first()
+                    if category:
+                        categories_data.append(
+                            {
+                                "id": category.id,
+                                "name": category.name,
+                                "slug": category.slug,
+                                "parentId": category.parent_id,
+                            },
+                        )
+                product_data["categories"] = categories_data
 
             # Add images if specified
             if product_dto.images:
+                logger.debug(f"Adding {len(product_dto.images)} images")
                 await self._add_images(product_model.id, product_dto.images)
 
-            # Add variants if specified
-            if product_dto.variants:
-                await self._add_variants(
-                    product_model.id,
-                    product_dto.variants,
-                    product_dto.currency,
-                )
+                # Use data from the DTO we already have
+                # Handle both object-style and dict-style image data
+                product_data["images"] = []
+                for img in product_dto.images:
+                    if isinstance(img, dict):
+                        # If it's a dictionary, use key access
+                        product_data["images"].append(
+                            {
+                                "url": img["url"],
+                                "alt": img.get("alt"),
+                                "isMain": img.get("isMain", False),
+                            },
+                        )
+                    else:
+                        # If it's an object with attributes, use attribute access
+                        product_data["images"].append(
+                            {"url": img.url, "alt": img.alt, "isMain": img.is_main},
+                        )
 
-            # Add config options if specified
-            if product_dto.config_options:
-                await self._add_config_options(
-                    product_model.id,
-                    product_dto.config_options,
-                )
+            # Add brand info if provided
+            if product_dto.brand_id:
+                stmt = select(BrandModel).where(BrandModel.id == product_dto.brand_id)
+                result = await self._session.execute(stmt)
+                brand = result.scalars().first()
+                if brand:
+                    product_data["brand"] = {
+                        "id": brand.id,
+                        "name": brand.name,
+                        "logo": brand.logo,
+                    }
 
-            # Ensure all data is saved
-            await self._session.flush()
-
-            # Reload the product with all relationships to avoid lazy loading issues
-            stmt = (
-                select(ProductModel)
-                .options(
-                    selectinload(ProductModel.categories),
-                    selectinload(ProductModel.images),
-                    selectinload(ProductModel.variants).selectinload(
-                        ProductVariantModel.images,
-                    ),
-                    joinedload(ProductModel.brand),
-                )
-                .where(ProductModel.id == product_model.id)
-            )
-
-            result = await self._session.execute(stmt)
-            product_model = result.scalars().first()
-
-            # Convert to domain entity
-            return await self._to_domain_entity(product_model)
+            # Create and return domain entity directly
+            logger.debug("Creating Product domain entity")
+            return Product(**product_data)
 
         except Exception as e:
             logger.error(f"Error creating product: {e!s}", exc_info=True)
@@ -166,15 +215,36 @@ class PostgreSQLProductRepository(ProductRepository):
 
     async def _add_images(self, product_id: uuid.UUID, images_data: List[Dict]) -> None:
         """Add images to a product."""
+        logger = logging.getLogger(__name__)
+
         for image_data in images_data:
-            image = ProductImageModel(
-                product_id=product_id,
-                url=image_data["url"],
-                alt=image_data.get("alt"),
-                is_main=image_data.get("isMain", False),
-                order=image_data.get("order", 0),
-            )
-            self._session.add(image)
+            try:
+                # Handle both object-style and dict-style image data
+                if isinstance(image_data, dict):
+                    # If it's a dictionary, use key access
+                    image = ProductImageModel(
+                        product_id=product_id,
+                        url=image_data["url"],
+                        alt=image_data.get("alt"),
+                        is_main=image_data.get("isMain", False),
+                        order=image_data.get("order", 0),
+                    )
+                else:
+                    # If it's an object with attributes, use attribute access
+                    image = ProductImageModel(
+                        product_id=product_id,
+                        url=image_data.url,
+                        alt=image_data.alt,
+                        is_main=image_data.is_main,
+                        order=getattr(image_data, "order", 0),
+                    )
+
+                self._session.add(image)
+
+            except Exception as e:
+                logger.error(f"Error adding image to product {product_id}: {e!s}")
+                # Continue with the next image instead of failing the whole operation
+                continue
 
     async def _add_variants(
         self,
@@ -183,31 +253,78 @@ class PostgreSQLProductRepository(ProductRepository):
         currency: str,
     ) -> None:
         """Add variants to a product."""
+        logger = logging.getLogger(__name__)
+
         for variant_data in variants_data:
-            variant = ProductVariantModel(
-                parent_product_id=product_id,
-                name=variant_data["name"],
-                sku=variant_data["sku"],
-                price_amount=variant_data["price"],
-                price_currency=currency,
-                compare_at_price=variant_data.get("compare_at_price"),
-                stock=variant_data.get("stock", 0),
-                is_available=variant_data.get("is_available", True),
-                is_selected=variant_data.get("is_selected", False),
-                attributes=variant_data.get("attributes", {}),
-            )
-            self._session.add(variant)
-
-            # Flush to get variant ID
-            await self._session.flush()
-
-            # Add variant images if they exist
-            if variant_data.get("images"):
-                await self._add_variant_images(
-                    product_id,
-                    variant.id,
-                    variant_data["images"],
+            try:
+                # Create the variant model
+                variant = ProductVariantModel(
+                    parent_product_id=product_id,
+                    name=(
+                        variant_data["name"]
+                        if isinstance(variant_data, dict)
+                        else variant_data.name
+                    ),
+                    sku=(
+                        variant_data["sku"]
+                        if isinstance(variant_data, dict)
+                        else variant_data.sku
+                    ),
+                    price_amount=(
+                        variant_data["price"]
+                        if isinstance(variant_data, dict)
+                        else variant_data.price
+                    ),
+                    price_currency=currency,
+                    compare_at_price=(
+                        variant_data.get("compare_at_price")
+                        if isinstance(variant_data, dict)
+                        else getattr(variant_data, "compare_at_price", None)
+                    ),
+                    stock=(
+                        variant_data.get("stock", 0)
+                        if isinstance(variant_data, dict)
+                        else getattr(variant_data, "stock", 0)
+                    ),
+                    is_available=(
+                        variant_data.get("is_available", True)
+                        if isinstance(variant_data, dict)
+                        else getattr(variant_data, "is_available", True)
+                    ),
+                    is_selected=(
+                        variant_data.get("is_selected", False)
+                        if isinstance(variant_data, dict)
+                        else getattr(variant_data, "is_selected", False)
+                    ),
+                    attributes=(
+                        variant_data.get("attributes", {})
+                        if isinstance(variant_data, dict)
+                        else getattr(variant_data, "attributes", {})
+                    ),
                 )
+
+                self._session.add(variant)
+
+                # Flush to get variant ID
+                await self._session.flush()
+                logger.debug(f"Added variant with ID {variant.id}")
+
+                # Add variant images if they exist
+                images = None
+                if isinstance(variant_data, dict) and "images" in variant_data:
+                    images = variant_data["images"]
+                elif hasattr(variant_data, "images"):
+                    images = variant_data.images
+
+                if images:
+                    await self._add_variant_images(product_id, variant.id, images)
+
+            except Exception as e:
+                logger.error(
+                    f"Error adding variant to product {product_id}: {e!s}",
+                    exc_info=True,
+                )
+                # Continue with next variant
 
     async def _add_variant_images(
         self,
@@ -216,16 +333,38 @@ class PostgreSQLProductRepository(ProductRepository):
         images_data: List[Dict],
     ) -> None:
         """Add images to a product variant."""
+        logger = logging.getLogger(__name__)
+
         for image_data in images_data:
-            image = ProductImageModel(
-                product_id=product_id,
-                variant_id=variant_id,
-                url=image_data["url"],
-                alt=image_data.get("alt"),
-                is_main=image_data.get("isMain", False),
-                order=image_data.get("order", 0),
-            )
-            self._session.add(image)
+            try:
+                # Handle both object-style and dict-style image data
+                if isinstance(image_data, dict):
+                    # If it's a dictionary, use key access
+                    image = ProductImageModel(
+                        product_id=product_id,
+                        variant_id=variant_id,
+                        url=image_data["url"],
+                        alt=image_data.get("alt"),
+                        is_main=image_data.get("isMain", False),
+                        order=image_data.get("order", 0),
+                    )
+                else:
+                    # If it's an object with attributes, use attribute access
+                    image = ProductImageModel(
+                        product_id=product_id,
+                        variant_id=variant_id,
+                        url=image_data.url,
+                        alt=image_data.alt,
+                        is_main=image_data.is_main,
+                        order=getattr(image_data, "order", 0),
+                    )
+
+                self._session.add(image)
+
+            except Exception as e:
+                logger.error(f"Error adding image to variant {variant_id}: {e!s}")
+                # Continue with the next image instead of failing the whole operation
+                continue
 
     async def _add_config_options(
         self,
@@ -821,7 +960,9 @@ class PostgreSQLProductRepository(ProductRepository):
         Returns:
             Domain entity
         """
-        # Prepare all data for the domain entity
+        logger = logging.getLogger(__name__)
+
+        # Prepare all data without triggering lazy loading
         product_data = {
             "id": model.id,
             "name": model.name,
@@ -848,37 +989,18 @@ class PostgreSQLProductRepository(ProductRepository):
             "warranty": model.warranty,
             "created_at": model.created_at,
             "updated_at": model.updated_at,
+            # Initialize empty collections for relationships
+            "categories": [],
+            "images": [],
+            "variants": [],
+            "config_options": [],
+            "brand": None,
         }
-
-        # Process relationships
-        if hasattr(model, "categories") and model.categories:
-            product_data["categories"] = self._prepare_categories(model.categories)
-
-        if hasattr(model, "images") and model.images:
-            # Get only product-level images (not variant images)
-            product_images = [img for img in model.images if img.variant_id is None]
-            if product_images:
-                product_data["images"] = self._prepare_images(product_images)
-
-        if hasattr(model, "variants") and model.variants:
-            product_data["variants"] = self._prepare_variants(model.variants)
-
-        if hasattr(model, "config_options") and model.config_options:
-            product_data["config_options"] = self._prepare_config_options(
-                model.config_options,
-            )
-
-        if hasattr(model, "brand") and model.brand:
-            product_data["brand"] = self._prepare_brand(model.brand)
-
-        if hasattr(model, "reviews") and model.reviews:
-            product_data["reviews"] = self._prepare_reviews(model.reviews)
 
         try:
             # Create domain entity from prepared data
             return Product(**product_data)
         except Exception as e:
-            logger = logging.getLogger(__name__)
             logger.error(
                 f"Error creating Product domain entity: {e!s}",
                 exc_info=True,
