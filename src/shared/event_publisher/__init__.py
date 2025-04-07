@@ -1,0 +1,1 @@
+"""Shared event publisher package."""
