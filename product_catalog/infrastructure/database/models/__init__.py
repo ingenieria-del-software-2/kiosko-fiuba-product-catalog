@@ -1,14 +1,8 @@
-"""Database models package."""
+from .dummy_model import DummyModel
 
-from product_catalog.infrastructure.database.models.dummy_model import (
-    DummyModel,  # noqa: F401
-)
+__all__ = ["DummyModel"]
 
 
 def load_all_models() -> None:
-    """
-    Load all models to register them with SQLAlchemy.
-    
-    This function doesn't do anything explicit as importing the models
-    is sufficient for the SQLAlchemy registration process.
-    """
+    """Load all models to register them with the Base metadata."""
+    # Add any additional model imports here if needed
