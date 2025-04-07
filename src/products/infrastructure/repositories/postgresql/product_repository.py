@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -252,7 +252,9 @@ class PostgreSQLProductRepository(ProductRepository):
         return result.scalars().first()
 
     def _update_basic_fields(
-        self, product_model: ProductModel, product_dto: ProductUpdateDTO
+        self,
+        product_model: ProductModel,
+        product_dto: ProductUpdateDTO,
     ) -> None:
         """Update basic fields of the product model.
 
@@ -260,7 +262,24 @@ class PostgreSQLProductRepository(ProductRepository):
             product_model: Product model to update
             product_dto: DTO with updated product data
         """
-        # Update product fields
+        # Update different groups of fields
+        self._update_name_and_description(product_model, product_dto)
+        self._update_pricing(product_model, product_dto)
+        self._update_inventory(product_model, product_dto)
+        self._update_product_attributes(product_model, product_dto)
+        self._update_product_features(product_model, product_dto)
+
+    def _update_name_and_description(
+        self,
+        product_model: ProductModel,
+        product_dto: ProductUpdateDTO,
+    ) -> None:
+        """Update name, slug, description and summary fields.
+
+        Args:
+            product_model: Product model to update
+            product_dto: DTO with updated product data
+        """
         if product_dto.name is not None:
             product_model.name = product_dto.name
         if product_dto.slug is not None:
@@ -269,12 +288,36 @@ class PostgreSQLProductRepository(ProductRepository):
             product_model.description = product_dto.description
         if product_dto.summary is not None:
             product_model.summary = product_dto.summary
+
+    def _update_pricing(
+        self,
+        product_model: ProductModel,
+        product_dto: ProductUpdateDTO,
+    ) -> None:
+        """Update price related fields.
+
+        Args:
+            product_model: Product model to update
+            product_dto: DTO with updated product data
+        """
         if product_dto.price is not None:
             product_model.price_amount = product_dto.price
         if product_dto.compare_at_price is not None:
             product_model.compare_at_price = product_dto.compare_at_price
         if product_dto.currency is not None:
             product_model.price_currency = product_dto.currency
+
+    def _update_inventory(
+        self,
+        product_model: ProductModel,
+        product_dto: ProductUpdateDTO,
+    ) -> None:
+        """Update inventory related fields.
+
+        Args:
+            product_model: Product model to update
+            product_dto: DTO with updated product data
+        """
         if product_dto.brand_id is not None:
             product_model.brand_id = product_dto.brand_id
         if product_dto.model is not None:
@@ -283,6 +326,18 @@ class PostgreSQLProductRepository(ProductRepository):
             product_model.sku = product_dto.sku
         if product_dto.stock is not None:
             product_model.stock = product_dto.stock
+
+    def _update_product_attributes(
+        self,
+        product_model: ProductModel,
+        product_dto: ProductUpdateDTO,
+    ) -> None:
+        """Update product attributes and status fields.
+
+        Args:
+            product_model: Product model to update
+            product_dto: DTO with updated product data
+        """
         if product_dto.is_available is not None:
             product_model.is_available = product_dto.is_available
         if product_dto.is_new is not None:
@@ -293,6 +348,18 @@ class PostgreSQLProductRepository(ProductRepository):
             product_model.condition = product_dto.condition
         if product_dto.has_variants is not None:
             product_model.has_variants = product_dto.has_variants
+
+    def _update_product_features(
+        self,
+        product_model: ProductModel,
+        product_dto: ProductUpdateDTO,
+    ) -> None:
+        """Update product features, tags, and additional data.
+
+        Args:
+            product_model: Product model to update
+            product_dto: DTO with updated product data
+        """
         if product_dto.tags is not None:
             product_model.tags = product_dto.tags
         if product_dto.attributes is not None:
@@ -305,7 +372,9 @@ class PostgreSQLProductRepository(ProductRepository):
             product_model.warranty = product_dto.warranty
 
     async def _update_categories(
-        self, product_model: ProductModel, product_dto: ProductUpdateDTO
+        self,
+        product_model: ProductModel,
+        product_dto: ProductUpdateDTO,
     ) -> None:
         """Update product categories.
 
@@ -325,7 +394,9 @@ class PostgreSQLProductRepository(ProductRepository):
                 product_model.categories = categories
 
     async def _update_images(
-        self, product_model: ProductModel, product_dto: ProductUpdateDTO
+        self,
+        product_model: ProductModel,
+        product_dto: ProductUpdateDTO,
     ) -> None:
         """Update product images.
 
@@ -354,7 +425,9 @@ class PostgreSQLProductRepository(ProductRepository):
                 self._session.add(image)
 
     async def _update_variants(
-        self, product_model: ProductModel, product_dto: ProductUpdateDTO
+        self,
+        product_model: ProductModel,
+        product_dto: ProductUpdateDTO,
     ) -> None:
         """Update product variants.
 
@@ -390,7 +463,9 @@ class PostgreSQLProductRepository(ProductRepository):
                 self._session.add(variant)
 
     async def _update_config_options(
-        self, product_model: ProductModel, product_dto: ProductUpdateDTO
+        self,
+        product_model: ProductModel,
+        product_dto: ProductUpdateDTO,
     ) -> None:
         """Update product configuration options.
 
@@ -455,7 +530,7 @@ class PostgreSQLProductRepository(ProductRepository):
 
         # Build queries with filters
         query, count_query = self._build_list_queries(filters)
-        
+
         # Execute queries
         result = await self._session.execute(query)
         count_result = await self._session.execute(count_query)
@@ -468,12 +543,15 @@ class PostgreSQLProductRepository(ProductRepository):
 
         return products, total
 
-    def _build_list_queries(self, filters: ProductFilterDTO):
+    def _build_list_queries(
+        self,
+        filters: ProductFilterDTO,
+    ) -> Tuple[Any, Any]:
         """Build list and count queries with filters applied.
-        
+
         Args:
             filters: Filtering parameters
-            
+
         Returns:
             Tuple of (list_query, count_query)
         """
@@ -500,15 +578,38 @@ class PostgreSQLProductRepository(ProductRepository):
 
         # Apply pagination
         query = query.offset(filters.offset).limit(filters.limit)
-        
+
         return query, count_query
-        
+
     def _build_filter_conditions(self, filters: ProductFilterDTO) -> List:
         """Build filter conditions for product queries.
-        
+
         Args:
             filters: Filtering parameters
-            
+
+        Returns:
+            List of filter conditions
+        """
+        conditions = []
+
+        # Apply category, brand, and price filters
+        conditions.extend(self._build_basic_filters(filters))
+
+        # Apply search filters
+        if filters.search:
+            conditions.extend(self._build_search_filters(filters.search))
+
+        # Apply additional filters
+        conditions.extend(self._build_additional_filters(filters))
+
+        return conditions
+
+    def _build_basic_filters(self, filters: ProductFilterDTO) -> List:
+        """Build basic filter conditions for category, brand, and price.
+
+        Args:
+            filters: Filtering parameters
+
         Returns:
             List of filter conditions
         """
@@ -532,15 +633,36 @@ class PostgreSQLProductRepository(ProductRepository):
         if filters.price_max is not None:
             conditions.append(ProductModel.price_amount <= filters.price_max)
 
-        if filters.search:
-            search_term = f"%{filters.search}%"
-            conditions.append(
-                or_(
-                    ProductModel.name.ilike(search_term),
-                    ProductModel.description.ilike(search_term),
-                    ProductModel.sku.ilike(search_term),
-                ),
-            )
+        return conditions
+
+    def _build_search_filters(self, search_term: str) -> List:
+        """Build search filter conditions.
+
+        Args:
+            search_term: Search string
+
+        Returns:
+            List of filter conditions
+        """
+        formatted_term = f"%{search_term}%"
+        return [
+            or_(
+                ProductModel.name.ilike(formatted_term),
+                ProductModel.description.ilike(formatted_term),
+                ProductModel.sku.ilike(formatted_term),
+            ),
+        ]
+
+    def _build_additional_filters(self, filters: ProductFilterDTO) -> List:
+        """Build additional filter conditions for tags and status.
+
+        Args:
+            filters: Filtering parameters
+
+        Returns:
+            List of filter conditions
+        """
+        conditions = []
 
         if filters.tags:
             for tag in filters.tags:
@@ -555,16 +677,20 @@ class PostgreSQLProductRepository(ProductRepository):
 
         if filters.condition:
             conditions.append(ProductModel.condition == filters.condition)
-            
+
         return conditions
-        
-    def _apply_sorting(self, query, filters: ProductFilterDTO):
+
+    def _apply_sorting(
+        self,
+        query: Any,
+        filters: ProductFilterDTO,
+    ) -> Any:
         """Apply sorting to the query.
-        
+
         Args:
             query: The query to apply sorting to
             filters: Filtering parameters with sorting info
-            
+
         Returns:
             Query with sorting applied
         """
@@ -577,7 +703,7 @@ class PostgreSQLProductRepository(ProductRepository):
         else:
             # Default sorting by created_at
             query = query.order_by(ProductModel.created_at.desc())
-            
+
         return query
 
     async def _to_domain_entity(self, model: ProductModel) -> Product:
@@ -633,13 +759,16 @@ class PostgreSQLProductRepository(ProductRepository):
         }
 
         return Product(**product_data)
-        
-    def _prepare_categories(self, categories):
+
+    def _prepare_categories(
+        self,
+        categories: List[CategoryModel],
+    ) -> List[dict]:
         """Prepare categories for domain entity.
-        
+
         Args:
             categories: List of category models
-            
+
         Returns:
             List of category dictionaries
         """
@@ -655,13 +784,16 @@ class PostgreSQLProductRepository(ProductRepository):
                     },
                 )
         return result
-        
-    def _prepare_images(self, images):
+
+    def _prepare_images(
+        self,
+        images: List[ProductImageModel],
+    ) -> List[dict]:
         """Prepare images for domain entity.
-        
+
         Args:
             images: List of image models
-            
+
         Returns:
             List of image dictionaries
         """
@@ -678,13 +810,16 @@ class PostgreSQLProductRepository(ProductRepository):
                     },
                 )
         return result
-        
-    def _prepare_variants(self, variants):
+
+    def _prepare_variants(
+        self,
+        variants: List[ProductVariantModel],
+    ) -> List[dict]:
         """Prepare variants for domain entity.
-        
+
         Args:
             variants: List of variant models
-            
+
         Returns:
             List of variant dictionaries
         """
@@ -708,13 +843,16 @@ class PostgreSQLProductRepository(ProductRepository):
                 }
                 result.append(variant_data)
         return result
-        
-    def _prepare_config_options(self, config_options):
+
+    def _prepare_config_options(
+        self,
+        config_options: List[ConfigOptionModel],
+    ) -> List[dict]:
         """Prepare config options for domain entity.
-        
+
         Args:
             config_options: List of config option models
-            
+
         Returns:
             List of config option dictionaries
         """
@@ -729,13 +867,16 @@ class PostgreSQLProductRepository(ProductRepository):
                     },
                 )
         return result
-        
-    def _prepare_reviews(self, reviews):
+
+    def _prepare_reviews(
+        self,
+        reviews: List[Any],
+    ) -> List[dict]:
         """Prepare reviews for domain entity.
-        
+
         Args:
             reviews: List of review models
-            
+
         Returns:
             List of review dictionaries
         """
@@ -756,19 +897,22 @@ class PostgreSQLProductRepository(ProductRepository):
                 }
                 result.append(review_data)
         return result
-        
-    def _prepare_brand(self, brand):
+
+    def _prepare_brand(
+        self,
+        brand: Any,
+    ) -> Optional[dict]:
         """Prepare brand for domain entity.
-        
+
         Args:
             brand: Brand model
-            
+
         Returns:
             Brand dictionary or None
         """
         if not brand:
             return None
-            
+
         return {
             "id": brand.id,
             "name": brand.name,
