@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -116,7 +116,11 @@ async def client(
     :param fastapi_app: the application.
     :yield: client for the app.
     """
-    async with AsyncClient(app=fastapi_app, base_url="http://test", timeout=2.0) as ac:
+    async with AsyncClient(
+        transport=ASGITransport(app=fastapi_app),
+        base_url="http://test",
+        timeout=2.0,
+    ) as ac:
         yield ac
 
 
@@ -250,3 +254,9 @@ def compare_product_dto_with_response() -> callable:
         assert dto.attributes == response_data["attributes"]
 
     return _compare
+
+
+@pytest.fixture(scope="session")
+def test_app() -> FastAPI:
+    """Create a test instance of the FastAPI application."""
+    return get_app()
