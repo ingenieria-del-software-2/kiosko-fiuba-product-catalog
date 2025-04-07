@@ -23,9 +23,30 @@ from src.shared.database.dependencies import get_db_session
 
 
 @pytest.fixture
-def mock_product_repository() -> AsyncMock:
+def mock_product_repository(sample_product_dto: ProductResponseDTO) -> AsyncMock:
     """Create a mock product repository."""
-    return AsyncMock(spec=ProductRepository)
+    mock = AsyncMock(spec=ProductRepository)
+    # Set up specific return values for repository methods
+    mock.create.return_value = sample_product_dto
+    mock.get_by_id.return_value = sample_product_dto
+    mock.get_by_sku.return_value = sample_product_dto
+    mock.update.return_value = sample_product_dto
+    mock.delete.return_value = True
+    mock.list.return_value = ([sample_product_dto], 1)
+    
+    # Handle specific method that expects scalars().all()
+    execute_mock = AsyncMock()
+    scalars_mock = MagicMock()
+    all_mock = MagicMock()
+    
+    all_mock.return_value = []  # Empty list of categories
+    scalars_mock.return_value = all_mock
+    execute_mock.return_value = scalars_mock
+    
+    mock._session = AsyncMock()
+    mock._session.execute = execute_mock
+    
+    return mock
 
 
 @pytest.fixture
