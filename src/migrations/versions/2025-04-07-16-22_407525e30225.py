@@ -1,8 +1,8 @@
-"""create_product_catalog_tables.
+"""initial.
 
-Revision ID: e3bbdc30424c
-Revises: manual_convert
-Create Date: 2025-04-07 13:14:13.350336
+Revision ID: 407525e30225
+Revises: 
+Create Date: 2025-04-07 16:22:26.531055
 
 """
 
@@ -10,11 +10,10 @@ from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = "e3bbdc30424c"
-down_revision: Union[str, None] = "manual_convert"
+revision: str = "407525e30225"
+down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -32,6 +31,25 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
+    )
+    op.create_table(
+        "categories",
+        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("name", sa.String(length=255), nullable=False),
+        sa.Column("slug", sa.String(length=255), nullable=False),
+        sa.Column("description", sa.Text(), nullable=True),
+        sa.Column("parent_id", sa.UUID(), nullable=True),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), nullable=False),
+        sa.ForeignKeyConstraint(["parent_id"], ["categories.id"], ondelete="SET NULL"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("slug"),
+    )
+    op.create_table(
+        "dummy_model",
+        sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
+        sa.Column("name", sa.String(length=200), nullable=False),
+        sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
         "promotions",
@@ -59,6 +77,38 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
+        "products",
+        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("name", sa.String(length=255), nullable=False),
+        sa.Column("slug", sa.String(length=255), nullable=False),
+        sa.Column("description", sa.Text(), nullable=False),
+        sa.Column("summary", sa.Text(), nullable=True),
+        sa.Column("price_amount", sa.Numeric(precision=10, scale=2), nullable=False),
+        sa.Column("price_currency", sa.String(length=3), nullable=False),
+        sa.Column("compare_at_price", sa.Numeric(precision=10, scale=2), nullable=True),
+        sa.Column("brand_id", sa.UUID(), nullable=True),
+        sa.Column("model", sa.String(length=255), nullable=True),
+        sa.Column("sku", sa.String(length=100), nullable=False),
+        sa.Column("status", sa.String(length=50), nullable=False),
+        sa.Column("stock", sa.Integer(), nullable=False),
+        sa.Column("is_available", sa.Boolean(), nullable=False),
+        sa.Column("is_new", sa.Boolean(), nullable=False),
+        sa.Column("is_refurbished", sa.Boolean(), nullable=False),
+        sa.Column("condition", sa.String(length=50), nullable=False),
+        sa.Column("has_variants", sa.Boolean(), nullable=False),
+        sa.Column("tags", sa.JSON(), nullable=False),
+        sa.Column("attributes", sa.JSON(), nullable=False),
+        sa.Column("highlighted_features", sa.JSON(), nullable=False),
+        sa.Column("warranty", sa.JSON(), nullable=True),
+        sa.Column("shipping", sa.JSON(), nullable=True),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), nullable=False),
+        sa.ForeignKeyConstraint(["brand_id"], ["brands.id"], ondelete="SET NULL"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("sku"),
+        sa.UniqueConstraint("slug"),
+    )
+    op.create_table(
         "config_options",
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("product_id", sa.UUID(), nullable=False),
@@ -70,25 +120,30 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
+        "inventory",
+        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("product_id", sa.UUID(), nullable=False),
+        sa.Column("quantity", sa.Numeric(precision=10, scale=0), nullable=False),
+        sa.Column("status", sa.String(length=50), nullable=False),
+        sa.Column(
+            "reorder_threshold",
+            sa.Numeric(precision=10, scale=0),
+            nullable=True,
+        ),
+        sa.Column("reorder_quantity", sa.Numeric(precision=10, scale=0), nullable=True),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), nullable=False),
+        sa.ForeignKeyConstraint(["product_id"], ["products.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("product_id"),
+    )
+    op.create_table(
         "product_categories",
         sa.Column("product_id", sa.UUID(), nullable=False),
         sa.Column("category_id", sa.UUID(), nullable=False),
         sa.ForeignKeyConstraint(["category_id"], ["categories.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["product_id"], ["products.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("product_id", "category_id"),
-    )
-    op.create_table(
-        "product_images",
-        sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("product_id", sa.UUID(), nullable=False),
-        sa.Column("url", sa.String(length=512), nullable=False),
-        sa.Column("alt", sa.String(length=255), nullable=True),
-        sa.Column("is_main", sa.Boolean(), nullable=False),
-        sa.Column("order", sa.Integer(), nullable=False),
-        sa.Column("created_at", sa.DateTime(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), nullable=False),
-        sa.ForeignKeyConstraint(["product_id"], ["products.id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
         "product_promotions",
@@ -142,100 +197,42 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("sku"),
     )
-    op.add_column(
-        "categories",
-        sa.Column("slug", sa.String(length=255), nullable=False),
+    op.create_table(
+        "product_images",
+        sa.Column("id", sa.UUID(), nullable=False),
+        sa.Column("product_id", sa.UUID(), nullable=False),
+        sa.Column("variant_id", sa.UUID(), nullable=True),
+        sa.Column("url", sa.String(length=512), nullable=False),
+        sa.Column("alt", sa.String(length=255), nullable=True),
+        sa.Column("is_main", sa.Boolean(), nullable=False),
+        sa.Column("order", sa.Integer(), nullable=False),
+        sa.Column("created_at", sa.DateTime(), nullable=False),
+        sa.Column("updated_at", sa.DateTime(), nullable=False),
+        sa.ForeignKeyConstraint(["product_id"], ["products.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(
+            ["variant_id"],
+            ["product_variants.id"],
+            ondelete="CASCADE",
+        ),
+        sa.PrimaryKeyConstraint("id"),
     )
-    op.drop_constraint("categories_name_key", "categories", type_="unique")
-    op.create_unique_constraint(None, "categories", ["slug"])
-    op.add_column("products", sa.Column("slug", sa.String(length=255), nullable=False))
-    op.add_column("products", sa.Column("summary", sa.Text(), nullable=True))
-    op.add_column(
-        "products",
-        sa.Column("compare_at_price", sa.Numeric(precision=10, scale=2), nullable=True),
-    )
-    op.add_column("products", sa.Column("brand_id", sa.UUID(), nullable=True))
-    op.add_column("products", sa.Column("model", sa.String(length=255), nullable=True))
-    op.add_column("products", sa.Column("stock", sa.Integer(), nullable=False))
-    op.add_column("products", sa.Column("is_available", sa.Boolean(), nullable=False))
-    op.add_column("products", sa.Column("is_new", sa.Boolean(), nullable=False))
-    op.add_column("products", sa.Column("is_refurbished", sa.Boolean(), nullable=False))
-    op.add_column(
-        "products",
-        sa.Column("condition", sa.String(length=50), nullable=False),
-    )
-    op.add_column("products", sa.Column("has_variants", sa.Boolean(), nullable=False))
-    op.add_column(
-        "products",
-        sa.Column("highlighted_features", sa.JSON(), nullable=False),
-    )
-    op.add_column("products", sa.Column("warranty", sa.JSON(), nullable=True))
-    op.add_column("products", sa.Column("shipping", sa.JSON(), nullable=True))
-    op.create_unique_constraint(None, "products", ["slug"])
-    op.drop_constraint("products_category_id_fkey", "products", type_="foreignkey")
-    op.create_foreign_key(
-        None,
-        "products",
-        "brands",
-        ["brand_id"],
-        ["id"],
-        ondelete="SET NULL",
-    )
-    op.drop_column("products", "category_id")
-    op.drop_column("products", "images")
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     """Undo the migration."""
     # ### commands auto generated by Alembic - please adjust! ###
-    op.add_column(
-        "products",
-        sa.Column(
-            "images",
-            postgresql.JSON(astext_type=sa.Text()),
-            autoincrement=False,
-            nullable=False,
-        ),
-    )
-    op.add_column(
-        "products",
-        sa.Column("category_id", sa.UUID(), autoincrement=False, nullable=True),
-    )
-    op.drop_constraint(None, "products", type_="foreignkey")
-    op.create_foreign_key(
-        "products_category_id_fkey",
-        "products",
-        "categories",
-        ["category_id"],
-        ["id"],
-        ondelete="SET NULL",
-    )
-    op.drop_constraint(None, "products", type_="unique")
-    op.drop_column("products", "shipping")
-    op.drop_column("products", "warranty")
-    op.drop_column("products", "highlighted_features")
-    op.drop_column("products", "has_variants")
-    op.drop_column("products", "condition")
-    op.drop_column("products", "is_refurbished")
-    op.drop_column("products", "is_new")
-    op.drop_column("products", "is_available")
-    op.drop_column("products", "stock")
-    op.drop_column("products", "model")
-    op.drop_column("products", "brand_id")
-    op.drop_column("products", "compare_at_price")
-    op.drop_column("products", "summary")
-    op.drop_column("products", "slug")
-    op.drop_constraint(None, "categories", type_="unique")
-    op.create_unique_constraint("categories_name_key", "categories", ["name"])
-    op.drop_column("categories", "slug")
+    op.drop_table("product_images")
     op.drop_table("product_variants")
     op.drop_table("product_reviews")
     op.drop_table("product_promotions")
-    op.drop_table("product_images")
     op.drop_table("product_categories")
+    op.drop_table("inventory")
     op.drop_table("config_options")
+    op.drop_table("products")
     op.drop_table("sellers")
     op.drop_table("promotions")
+    op.drop_table("dummy_model")
+    op.drop_table("categories")
     op.drop_table("brands")
     # ### end Alembic commands ###
