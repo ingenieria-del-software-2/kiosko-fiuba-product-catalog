@@ -9,6 +9,9 @@ maintainers = [
 
 ]
 readme = "README.md"
+packages = [
+    {include = "src"}
+]
 
 [tool.poetry.dependencies]
 python = ">3.9.1,<4"
