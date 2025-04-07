@@ -246,14 +246,29 @@ class ProductService:
                 category["parentId"] = str(category["parentId"])
 
     def _process_images(self, images: List[Dict]) -> None:
-        """Process image UUIDs.
+        """Process image UUIDs and ensure each image has an ID.
 
         Args:
             images: List of image dictionaries
         """
-        for image in images:
+        for i, image in enumerate(images):
+            # Convert existing ID if it's a UUID
             if isinstance(image.get("id"), uuid.UUID):
                 image["id"] = str(image["id"])
+
+            # If image doesn't have an ID, generate one
+            if "id" not in image:
+                # Use index as part of the ID to ensure uniqueness
+                image["id"] = str(uuid.uuid4())
+
+                # Log this addition for debugging
+                logger.debug(
+                    f"Added missing image ID: {image['id']} for image at index {i}",
+                )
+
+            # Ensure isMain is present
+            if "isMain" not in image and "is_main" in image:
+                image["isMain"] = image["is_main"]
 
     def _process_variants(self, variants: List[Dict]) -> None:
         """Process variant UUIDs and their nested structures.
