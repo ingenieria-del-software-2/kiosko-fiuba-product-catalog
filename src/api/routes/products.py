@@ -51,7 +51,7 @@ async def get_product_service(
 
 
 @router.post(
-    "",
+    "/",
     response_model=ProductResponseDTO,
     status_code=status.HTTP_201_CREATED,
     summary="Create a new product",
@@ -219,7 +219,7 @@ async def delete_product(
 
 
 @router.get(
-    "",
+    "/",
     response_model=Dict[str, Any],
     summary="List products",
     description="List products with optional filtering and pagination",
