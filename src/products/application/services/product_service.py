@@ -48,19 +48,19 @@ class ProductService:
             DTO with created product data
         """
         product = await self._product_repository.create(product_data)
-        
+
         # Publish event if event_publisher is provided
         if self._event_publisher:
             from src.products.domain.events.events import ProductCreatedEvent
-            
+
             event = ProductCreatedEvent(
                 event_id=uuid.uuid4(),
                 event_type="product.created",
                 aggregate_id=product.id,
-                product_data={"product_id": str(product.id)}
+                product_data={"product_id": str(product.id)},
             )
             await self._event_publisher.publish(event)
-            
+
         return self._to_response_dto(product)
 
     async def get_product_by_id(

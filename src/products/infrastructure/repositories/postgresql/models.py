@@ -144,7 +144,9 @@ class ProductModel(Base):
     # Relationships
     brand = relationship("BrandModel", back_populates="products")
     images = relationship(
-        "ProductImageModel", back_populates="product", cascade="all, delete-orphan"
+        "ProductImageModel",
+        back_populates="product",
+        cascade="all, delete-orphan",
     )
     variants = relationship(
         "ProductVariantModel",
@@ -152,7 +154,9 @@ class ProductModel(Base):
         cascade="all, delete-orphan",
     )
     reviews = relationship(
-        "ProductReviewModel", back_populates="product", cascade="all, delete-orphan"
+        "ProductReviewModel",
+        back_populates="product",
+        cascade="all, delete-orphan",
     )
     categories = relationship(
         "CategoryModel",
@@ -160,7 +164,9 @@ class ProductModel(Base):
         back_populates="products",
     )
     config_options = relationship(
-        "ConfigOptionModel", back_populates="product", cascade="all, delete-orphan"
+        "ConfigOptionModel",
+        back_populates="product",
+        cascade="all, delete-orphan",
     )
     promotions = relationship(
         "PromotionModel",

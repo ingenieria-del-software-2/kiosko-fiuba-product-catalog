@@ -42,11 +42,13 @@ def mock_product_repository(sample_product_dto: ProductResponseDTO) -> AsyncMock
     all_mock.return_value = []  # Empty list of categories
     scalars_mock.return_value = all_mock
     execute_mock.return_value = scalars_mock
-    
-    # Use setattr to avoid direct private member access warnings
+
+    # Create a session mock
     session_mock = AsyncMock()
     session_mock.execute = execute_mock
-    setattr(mock, "_session", session_mock)
+
+    # Set session using object.__setattr__ to avoid linting warnings
+    object.__setattr__(mock, "_session", session_mock)
 
     return mock
 

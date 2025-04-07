@@ -197,7 +197,9 @@ class PostgreSQLProductRepository(ProductRepository):
         return await self._to_domain_entity(product_model)
 
     async def update(
-        self, product_id: uuid.UUID, product_dto: ProductUpdateDTO,
+        self,
+        product_id: uuid.UUID,
+        product_dto: ProductUpdateDTO,
     ) -> Optional[Product]:
         """Update a product.
 
@@ -381,7 +383,8 @@ class PostgreSQLProductRepository(ProductRepository):
         return True
 
     async def list(
-        self, filters: Optional[ProductFilterDTO] = None,
+        self,
+        filters: Optional[ProductFilterDTO] = None,
     ) -> Tuple[List[Product], int]:
         """List products with optional filtering.
 

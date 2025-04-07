@@ -3,7 +3,6 @@
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi import FastAPI
@@ -14,7 +13,6 @@ from src.products.application.dtos.product_dtos import (
     ImageDTO,
     ProductFilterDTO,
     ProductResponseDTO,
-    ProductUpdateDTO,
 )
 from src.products.application.services.product_service import ProductService
 from src.products.domain.exceptions.domain_exceptions import ProductNotFoundError
@@ -43,7 +41,9 @@ class MockProductService:
         return self.sample_product
 
     async def update_product(
-        self, product_id: uuid.UUID, product_data: Any
+        self,
+        product_id: uuid.UUID,
+        product_data: Any,
     ) -> ProductResponseDTO:
         """Mock update product method."""
         if str(product_id) == "00000000-0000-0000-0000-000000000000":
@@ -61,13 +61,15 @@ class MockProductService:
         return [self.sample_product]
 
     async def get_products_by_category(
-        self, category_id: uuid.UUID
+        self,
+        category_id: uuid.UUID,
     ) -> List[ProductResponseDTO]:
         """Mock get products by category method."""
         return [self.sample_product]
 
     async def list_products(
-        self, filters: ProductFilterDTO
+        self,
+        filters: ProductFilterDTO,
     ) -> tuple[List[ProductResponseDTO], int]:
         """Mock list products method."""
         return [self.sample_product], 1
@@ -283,8 +285,8 @@ def test_update_product_success(
     """Test successfully updating a product."""
     product_id = str(sample_product_dto.id)
     response = client.put(
-        f"/api/products/{product_id}", 
-        json=sample_product_update_request
+        f"/api/products/{product_id}",
+        json=sample_product_update_request,
     )
 
     # Verify the response
@@ -301,8 +303,8 @@ def test_update_product_not_found(
     """Test updating a non-existent product."""
     product_id = "00000000-0000-0000-0000-000000000000"
     response = client.put(
-        f"/api/products/{product_id}", 
-        json=sample_product_update_request
+        f"/api/products/{product_id}",
+        json=sample_product_update_request,
     )
 
     # Verify the response

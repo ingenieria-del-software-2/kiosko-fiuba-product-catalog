@@ -15,7 +15,7 @@ from src.products.application.dtos.product_dtos import (
 from src.products.application.services.product_service import ProductService
 from src.products.domain.exceptions.domain_exceptions import ProductNotFoundError
 from src.products.infrastructure.repositories.postgresql.category_repository import (
-    PostgreSQLCategoryRepository,
+    PostgresCategoryRepository,
 )
 from src.products.infrastructure.repositories.postgresql.product_repository import (
     PostgreSQLProductRepository,
@@ -41,7 +41,7 @@ async def get_product_service(
         Initialized product service
     """
     product_repository = PostgreSQLProductRepository(db_session)
-    category_repository = PostgreSQLCategoryRepository(db_session)
+    category_repository = PostgresCategoryRepository(db_session)
     event_publisher = ConsoleEventPublisher()
     return ProductService(
         product_repository=product_repository,
@@ -152,15 +152,15 @@ async def update_product(
     product_service: ProductService = Depends(get_product_service),
 ) -> ProductResponseDTO:
     """Update a product.
-    
+
     Args:
         product_data: Data for updating the product
         product_id: ID of the product to update
         product_service: Product service dependency
-        
+
     Returns:
         Updated product data
-        
+
     Raises:
         HTTPException: If product not found
     """
@@ -179,7 +179,7 @@ async def update_product(
         product_data.highlighted_features = product_data.highlightedFeatures  # type: ignore
     if hasattr(product_data, "configOptions"):
         product_data.config_options = product_data.configOptions  # type: ignore
-        
+
     try:
         result = await product_service.update_product(product_id, product_data)
         return cast(ProductResponseDTO, result)

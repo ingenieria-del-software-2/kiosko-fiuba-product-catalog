@@ -49,7 +49,9 @@ class BrandRepository(ABC):
 
     @abstractmethod
     async def update(
-        self, brand_id: uuid.UUID, brand_dto: BrandUpdateDTO,
+        self,
+        brand_id: uuid.UUID,
+        brand_dto: BrandUpdateDTO,
     ) -> Optional[Brand]:
         """Update a brand.
 

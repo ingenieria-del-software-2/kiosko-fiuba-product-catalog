@@ -25,7 +25,6 @@ class ProductRepository(ABC):
         Returns:
             Created product entity
         """
-        pass
 
     @abstractmethod
     async def get_by_id(self, product_id: uuid.UUID) -> Optional[Product]:
@@ -37,7 +36,6 @@ class ProductRepository(ABC):
         Returns:
             Product entity or None if not found
         """
-        pass
 
     @abstractmethod
     async def get_by_sku(self, sku: str) -> Optional[Product]:
@@ -49,11 +47,12 @@ class ProductRepository(ABC):
         Returns:
             Product entity or None if not found
         """
-        pass
 
     @abstractmethod
     async def update(
-        self, product_id: uuid.UUID, product_dto: ProductUpdateDTO
+        self,
+        product_id: uuid.UUID,
+        product_dto: ProductUpdateDTO,
     ) -> Optional[Product]:
         """Update a product.
 
@@ -64,7 +63,6 @@ class ProductRepository(ABC):
         Returns:
             Updated product entity or None if not found
         """
-        pass
 
     @abstractmethod
     async def delete(self, product_id: uuid.UUID) -> bool:
@@ -76,11 +74,11 @@ class ProductRepository(ABC):
         Returns:
             True if deleted, False if not found
         """
-        pass
 
     @abstractmethod
     async def list(
-        self, filters: Optional[ProductFilterDTO] = None
+        self,
+        filters: Optional[ProductFilterDTO] = None,
     ) -> Tuple[List[Product], int]:
         """List products with optional filtering.
 
@@ -90,4 +88,3 @@ class ProductRepository(ABC):
         Returns:
             List of product entities and total count
         """
-        pass

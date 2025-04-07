@@ -12,7 +12,6 @@ from src.products.application.dtos.product_dtos import (
 )
 from src.products.application.services.product_service import ProductService
 from src.products.domain.entities.product import Product
-from src.products.domain.model.value_objects import Money
 
 
 @pytest.mark.asyncio
@@ -46,7 +45,7 @@ async def test_product_service_create() -> None:
                 "alt": "Test Image 1",
                 "isMain": True,
                 "order": 0,
-            }
+            },
         ],
         tags=["test", "sample"],
         attributes=[
@@ -89,7 +88,7 @@ async def test_product_service_create() -> None:
                 "alt": "Test Image 1",
                 "isMain": True,
                 "order": 0,
-            }
+            },
         ],
         tags=["test", "sample"],
         attributes=[

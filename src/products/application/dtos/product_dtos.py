@@ -2,9 +2,9 @@
 
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Type, Callable, ClassVar
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, RootModel, ConfigDict, field_validator, ValidationInfo
+from pydantic import BaseModel, ConfigDict, RootModel, ValidationInfo, field_validator
 
 
 class BrandDTO(BaseModel):
@@ -21,7 +21,12 @@ class CategoryDTO(BaseModel):
     id: uuid.UUID
     name: str
     slug: str
-    parentId: Optional[uuid.UUID] = None
+    parent_id: Optional[uuid.UUID] = None
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=lambda field_name: "parentId" if field_name == "parent_id" else field_name
+    )
 
 
 class ImageDTO(BaseModel):
@@ -30,8 +35,13 @@ class ImageDTO(BaseModel):
     id: str
     url: str
     alt: Optional[str] = None
-    isMain: bool = False
+    is_main: bool = False
     order: int = 0
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=lambda field_name: "isMain" if field_name == "is_main" else field_name
+    )
 
 
 class AttributeDTO(BaseModel):
@@ -40,9 +50,18 @@ class AttributeDTO(BaseModel):
     id: str
     name: str
     value: Any
-    displayValue: str
-    isHighlighted: bool = False
-    groupName: Optional[str] = None
+    display_value: str
+    is_highlighted: bool = False
+    group_name: Optional[str] = None
+
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=lambda field_name: {
+            "display_value": "displayValue",
+            "is_highlighted": "isHighlighted", 
+            "group_name": "groupName"
+        }.get(field_name, field_name)
+    )
 
 
 class ConfigOptionValueDTO(BaseModel):
@@ -50,9 +69,17 @@ class ConfigOptionValueDTO(BaseModel):
 
     id: str
     value: str
-    isAvailable: bool = True
-    isSelected: bool = False
+    is_available: bool = True
+    is_selected: bool = False
     image: Optional[str] = None
+    
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=lambda field_name: {
+            "is_available": "isAvailable",
+            "is_selected": "isSelected"
+        }.get(field_name, field_name)
+    )
 
 
 class ConfigOptionDTO(BaseModel):
@@ -69,15 +96,30 @@ class ShippingMethodDTO(BaseModel):
     id: str
     name: str
     cost: float
-    estimatedDeliveryTime: Dict[str, Any]
+    estimated_delivery_time: Dict[str, Any]
+    
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=lambda field_name: "estimatedDeliveryTime" 
+            if field_name == "estimated_delivery_time" else field_name
+    )
 
 
 class ShippingDTO(BaseModel):
     """DTO for product shipping information."""
 
-    isFree: bool = False
-    estimatedDeliveryTime: Dict[str, Any]
-    availableShippingMethods: List[ShippingMethodDTO]
+    is_free: bool = False
+    estimated_delivery_time: Dict[str, Any]
+    available_shipping_methods: List[ShippingMethodDTO]
+    
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=lambda field_name: {
+            "is_free": "isFree",
+            "estimated_delivery_time": "estimatedDeliveryTime",
+            "available_shipping_methods": "availableShippingMethods"
+        }.get(field_name, field_name)
+    )
 
 
 class SellerReputationDTO(BaseModel):
@@ -85,10 +127,20 @@ class SellerReputationDTO(BaseModel):
 
     level: str
     score: float
-    totalSales: int
-    completedSales: int
-    canceledSales: int
-    totalReviews: int
+    total_sales: int
+    completed_sales: int
+    canceled_sales: int
+    total_reviews: int
+    
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=lambda field_name: {
+            "total_sales": "totalSales",
+            "completed_sales": "completedSales",
+            "canceled_sales": "canceledSales",
+            "total_reviews": "totalReviews"
+        }.get(field_name, field_name)
+    )
 
 
 class SellerDTO(BaseModel):
@@ -96,9 +148,14 @@ class SellerDTO(BaseModel):
 
     id: str
     name: str
-    isOfficial: bool = False
+    is_official: bool = False
     reputation: Optional[SellerReputationDTO] = None
     location: Optional[str] = None
+    
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=lambda field_name: "isOfficial" if field_name == "is_official" else field_name
+    )
 
 
 class RatingDistributionDTO(RootModel):
@@ -131,15 +188,24 @@ class ReviewDTO(BaseModel):
     """DTO for product review."""
 
     id: str
-    userId: str
-    userName: str
+    user_id: str
+    user_name: str
     rating: int
     title: Optional[str] = None
     comment: str
     date: datetime
-    isVerifiedPurchase: bool = False
+    is_verified_purchase: bool = False
     likes: int = 0
     attributes: Optional[List[ReviewAttributeDTO]] = None
+    
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=lambda field_name: {
+            "user_id": "userId",
+            "user_name": "userName",
+            "is_verified_purchase": "isVerifiedPurchase"
+        }.get(field_name, field_name)
+    )
 
 
 class InstallmentDTO(BaseModel):
@@ -147,8 +213,16 @@ class InstallmentDTO(BaseModel):
 
     quantity: int
     amount: float
-    interestRate: float
-    totalAmount: float
+    interest_rate: float
+    total_amount: float
+    
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=lambda field_name: {
+            "interest_rate": "interestRate",
+            "total_amount": "totalAmount"
+        }.get(field_name, field_name)
+    )
 
 
 class PaymentOptionDTO(BaseModel):
@@ -163,11 +237,16 @@ class PaymentOptionDTO(BaseModel):
 class WarrantyDTO(BaseModel):
     """DTO for product warranty."""
 
-    hasWarranty: bool = False
+    has_warranty: bool = False
     length: Optional[int] = None
     unit: Optional[str] = None
     type: Optional[str] = None
     description: Optional[str] = None
+    
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=lambda field_name: "hasWarranty" if field_name == "has_warranty" else field_name
+    )
 
 
 class PromotionDTO(BaseModel):
@@ -176,9 +255,18 @@ class PromotionDTO(BaseModel):
     id: str
     type: str
     description: str
-    discountPercentage: Optional[float] = None
-    validFrom: datetime
-    validTo: datetime
+    discount_percentage: Optional[float] = None
+    valid_from: datetime
+    valid_to: datetime
+    
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=lambda field_name: {
+            "discount_percentage": "discountPercentage",
+            "valid_from": "validFrom",
+            "valid_to": "validTo"
+        }.get(field_name, field_name)
+    )
 
 
 class ProductVariantDTO(BaseModel):
@@ -188,13 +276,22 @@ class ProductVariantDTO(BaseModel):
     sku: str
     name: str
     price: float
-    compareAtPrice: Optional[float] = None
+    compare_at_price: Optional[float] = None
     attributes: Dict[str, Any]
     stock: int
-    isAvailable: bool = True
-    isSelected: bool = False
+    is_available: bool = True
+    is_selected: bool = False
     image: Optional[str] = None
     images: Optional[List[ImageDTO]] = None
+    
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=lambda field_name: {
+            "compare_at_price": "compareAtPrice",
+            "is_available": "isAvailable",
+            "is_selected": "isSelected"
+        }.get(field_name, field_name)
+    )
 
 
 class ProductResponseDTO(BaseModel):
@@ -384,6 +481,17 @@ class ProductFilterDTO(BaseModel):
     category_id: Optional[uuid.UUID] = None
     brand_id: Optional[uuid.UUID] = None
     price_min: Optional[float] = None
+    price_max: Optional[float] = None
+    search: Optional[str] = None
+    tags: Optional[List[str]] = None
+    is_available: Optional[bool] = None
+    is_new: Optional[bool] = None
+    condition: Optional[str] = None
+    sort_by: Optional[str] = None
+    sort_order: Optional[str] = "asc"
+    limit: Optional[int] = 10
+    offset: Optional[int] = 0
+
     price_max: Optional[float] = None
     search: Optional[str] = None
     tags: Optional[List[str]] = None
