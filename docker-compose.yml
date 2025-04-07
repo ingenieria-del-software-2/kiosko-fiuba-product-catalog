@@ -51,7 +51,7 @@ services:
   migrator:
     image: product_catalog:${PRODUCT_CATALOG_VERSION:-latest}
     restart: "no"
-    command: alembic upgrade head
+    command: alembic upgrade heads
     environment:
       PRODUCT_CATALOG_DB_HOST: product-catalog-db
       PRODUCT_CATALOG_DB_PORT: 5432
