@@ -1,7 +1,6 @@
 """PostgreSQL implementation of ProductRepository."""
 
 from datetime import datetime
-from decimal import Decimal
 from typing import Any, Dict, List, Optional, cast
 from uuid import UUID
 
@@ -181,7 +180,7 @@ class PostgresProductRepository(ProductRepository):
         id_val = cast(UUID, product_model.id)
         name_val = cast(str, product_model.name)
         description_val = cast(str, product_model.description)
-        price_amount_val = cast(Decimal, product_model.price_amount)
+        price_amount_val = float(product_model.price_amount)  # Convert Numeric to float
         price_currency_val = cast(str, product_model.price_currency)
         category_id_val = cast(Optional[UUID], product_model.category_id)
         sku_val = cast(str, product_model.sku)

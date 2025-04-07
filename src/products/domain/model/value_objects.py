@@ -1,7 +1,6 @@
 """Value objects for the Product Catalog domain."""
 
 from dataclasses import dataclass
-from decimal import Decimal
 from enum import Enum
 
 
@@ -24,7 +23,7 @@ class InventoryStatus(str, Enum):
 class Money:
     """Value object representing monetary values."""
 
-    amount: Decimal
+    amount: float
     currency: str = "USD"
 
     def __post_init__(self) -> None:

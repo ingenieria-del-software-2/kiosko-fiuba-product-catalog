@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+from sqlalchemy.types import JSON
 
 from src.api.app import get_app
 from src.api.routes.products import router as product_router
@@ -23,6 +24,13 @@ from src.products.application.dtos.product_dtos import ProductResponseDTO
 from src.shared.database.base import Base
 from src.shared.database.dependencies import get_db_session
 from src.shared.database.model_loader import load_all_models
+
+# Patch PostgreSQL-specific ARRAY type with JSON for SQLite in tests
+with patch("sqlalchemy.dialects.postgresql.ARRAY", lambda x: JSON):
+    from src.products.infrastructure.repositories.postgresql.models import (
+        CategoryModel,
+        ProductModel,
+    )
 
 
 @pytest.fixture(scope="session")
@@ -44,6 +52,10 @@ async def _engine() -> AsyncGenerator[AsyncEngine, None]:
     """
     # Load models first
     load_all_models()
+
+    # Make sure our patched models are loaded
+    assert ProductModel.__tablename__ == "products"
+    assert CategoryModel.__tablename__ == "categories"
 
     # Use SQLite for tests
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")

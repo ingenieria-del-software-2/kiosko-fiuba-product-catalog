@@ -4,10 +4,9 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import JSON, Column, DateTime, ForeignKey, Numeric, String, Text
-from sqlalchemy.dialects.postgresql import ARRAY, UUID
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.dialects.postgresql import UUID
 
-Base = declarative_base()
+from src.shared.database.base import Base
 
 
 class ProductModel(Base):
@@ -27,8 +26,8 @@ class ProductModel(Base):
     )
     sku = Column(String(100), nullable=False, unique=True)
     status = Column(String(50), nullable=False, default="active")
-    images = Column(ARRAY(String), nullable=False, default=[])
-    tags = Column(ARRAY(String), nullable=False, default=[])
+    images = Column(JSON, nullable=False, default=[])
+    tags = Column(JSON, nullable=False, default=[])
     attributes = Column(JSON, nullable=False, default={})
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(

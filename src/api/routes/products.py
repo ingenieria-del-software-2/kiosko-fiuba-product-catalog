@@ -1,6 +1,5 @@
 """Product API routes."""
 
-from decimal import Decimal
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
@@ -79,7 +78,7 @@ async def create_product(
         product_dto = ProductCreateDTO(
             name=product.name,
             description=product.description,
-            price=Decimal(str(product.price)),
+            price=product.price,
             currency=product.currency,
             category_id=product.category_id,
             sku=product.sku,
@@ -175,14 +174,11 @@ async def update_product(
 ) -> ProductResponse:
     """Update a product."""
     try:
-        # Convert float price to Decimal if it's not None
-        price = Decimal(str(product.price)) if product.price is not None else None
-
         product_dto = ProductUpdateDTO(
             id=product_id,
             name=product.name,
             description=product.description,
-            price=price,
+            price=product.price,
             currency=product.currency,
             category_id=product.category_id,
             sku=product.sku,
