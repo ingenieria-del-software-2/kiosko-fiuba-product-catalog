@@ -12,77 +12,78 @@ echo "Populando la base de datos..."
 # Crear categorías
 echo "Creando categorías..."
 
-# Categoría de Electrónicos
-ELECTRONICS_CAT=$(curl -s -X POST "$CATEGORIES_URL" \
+ELECTRONICS_ID=$(curl -s -X POST "$CATEGORIES_URL" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Electrónicos",
+    "slug": "electronicos",
     "description": "Productos electrónicos y gadgets"
-  }')
+  }' | jq -r '.id')
 
-ELECTRONICS_ID=$(echo $ELECTRONICS_CAT | grep -o '"id":"[^"]*' | cut -d'"' -f4)
 echo "Categoría Electrónicos creada con ID: $ELECTRONICS_ID"
 
-# Subcategoría de Laptops
-LAPTOPS_CAT=$(curl -s -X POST "$CATEGORIES_URL" \
+LAPTOPS_ID=$(curl -s -X POST "$CATEGORIES_URL" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Laptops",
+    "slug": "laptops",
     "description": "Computadoras portátiles y notebooks",
-    "parent_id": "'$ELECTRONICS_ID'"
-  }')
+    "parent_id": "'"$ELECTRONICS_ID"'"
+  }' | jq -r '.id')
 
-LAPTOPS_ID=$(echo $LAPTOPS_CAT | grep -o '"id":"[^"]*' | cut -d'"' -f4)
 echo "Categoría Laptops creada con ID: $LAPTOPS_ID"
 
-# Categoría de Hogar
-HOME_CAT=$(curl -s -X POST "$CATEGORIES_URL" \
+HOME_ID=$(curl -s -X POST "$CATEGORIES_URL" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Hogar",
+    "slug": "hogar",
     "description": "Productos para el hogar"
-  }')
+  }' | jq -r '.id')
 
-HOME_ID=$(echo $HOME_CAT | grep -o '"id":"[^"]*' | cut -d'"' -f4)
 echo "Categoría Hogar creada con ID: $HOME_ID"
 
-# Subcategoría de Cocina
-KITCHEN_CAT=$(curl -s -X POST "$CATEGORIES_URL" \
+KITCHEN_ID=$(curl -s -X POST "$CATEGORIES_URL" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Cocina",
+    "slug": "cocina",
     "description": "Productos para la cocina",
-    "parent_id": "'$HOME_ID'"
-  }')
+    "parent_id": "'"$HOME_ID"'"
+  }' | jq -r '.id')
 
-KITCHEN_ID=$(echo $KITCHEN_CAT | grep -o '"id":"[^"]*' | cut -d'"' -f4)
 echo "Categoría Cocina creada con ID: $KITCHEN_ID"
+
+# Validar IDs
+if [[ -z "$ELECTRONICS_ID" || "$ELECTRONICS_ID" == "null" ||
+      -z "$LAPTOPS_ID" || "$LAPTOPS_ID" == "null" ||
+      -z "$HOME_ID" || "$HOME_ID" == "null" ||
+      -z "$KITCHEN_ID" || "$KITCHEN_ID" == "null" ]]; then
+  echo "❌ Error: Uno o más IDs de categoría son inválidos."
+  exit 1
+fi
 
 # Crear marcas
 echo "Creando marcas..."
 
-# Marca HP
-HP_BRAND=$(curl -s -X POST "$BRANDS_URL" \
+HP_ID=$(curl -s -X POST "$BRANDS_URL" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "HP",
     "logo": "https://example.com/hp-logo.png",
     "description": "Hewlett-Packard Company"
-  }')
+  }' | jq -r '.id')
 
-HP_ID=$(echo $HP_BRAND | grep -o '"id":"[^"]*' | cut -d'"' -f4)
 echo "Marca HP creada con ID: $HP_ID"
 
-# Marca Thermos
-THERMOS_BRAND=$(curl -s -X POST "$BRANDS_URL" \
+THERMOS_ID=$(curl -s -X POST "$BRANDS_URL" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Thermos",
     "logo": "https://example.com/thermos-logo.png",
     "description": "Especialistas en productos térmicos"
-  }')
+  }' | jq -r '.id')
 
-THERMOS_ID=$(echo $THERMOS_BRAND | grep -o '"id":"[^"]*' | cut -d'"' -f4)
 echo "Marca Thermos creada con ID: $THERMOS_ID"
 
 # Crear productos
@@ -94,6 +95,7 @@ curl -s -X POST "$PRODUCTS_URL/" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Laptop HP Pavilion 15",
+    "slug": "laptop-hp-pavilion-15",
     "description": "Laptop HP Pavilion 15 con procesador Intel Core i7, 16GB de RAM y 512GB SSD",
     "summary": "Laptop potente y versátil para trabajo y entretenimiento",
     "price": 12999.99,
@@ -187,7 +189,8 @@ curl -s -X POST "$PRODUCTS_URL/" \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Termo Stanley Clásico 1.4lts Negro",
-    "description": "Termo Stanley de acero inoxidable con capacidad de 1.4 litros, mantiene las bebidas calientes por 24 horas y frías por 36 horas",
+    "slug": "termo-stanley-clasico-1.4lts-negro",
+    "description": "Termo Stanley de acero inoxidable con capacidad de 1.4 litros",
     "summary": "Termo de alta calidad para mantener tus bebidas a la temperatura ideal",
     "price": 4999.99,
     "compareAtPrice": 5999.99,
@@ -262,4 +265,4 @@ curl -s -X POST "$PRODUCTS_URL/" \
     ]
   }'
 
-echo "Base de datos populada con éxito!" 
+echo "✅ Base de datos populada con éxito."
