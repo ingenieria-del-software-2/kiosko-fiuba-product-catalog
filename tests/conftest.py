@@ -1,12 +1,14 @@
 """Test fixtures for the product catalog service."""
 
 import uuid
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any, AsyncGenerator, Dict, List
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from httpx import ASGITransport, AsyncClient
@@ -21,21 +23,15 @@ from src.api.app import get_app
 from src.api.routes.products import router as product_router
 from src.products.application.dtos.product_dtos import ProductResponseDTO
 from src.shared.database.base import Base
+from src.shared.database.connection import get_session_factory
 from src.shared.database.dependencies import get_db_session
 from src.shared.database.model_loader import load_all_models
 
-
-@pytest.fixture(scope="session")
-def anyio_backend() -> str:
-    """
-    Backend for anyio pytest plugin.
-
-    :return: backend name.
-    """
-    return "asyncio"
+# We don't need to define our own anyio_backend fixture
+# Let pytest-asyncio handle it with its defaults
 
 
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(scope="function")
 async def _engine() -> AsyncGenerator[AsyncEngine, None]:
     """
     Create engine and databases.
@@ -61,7 +57,7 @@ async def _engine() -> AsyncGenerator[AsyncEngine, None]:
         await engine.dispose()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture(scope="function")
 async def dbsession(
     _engine: AsyncEngine,
 ) -> AsyncGenerator[AsyncSession, None]:
@@ -74,21 +70,16 @@ async def dbsession(
     :param _engine: current engine.
     :yields: async session.
     """
-    connection = await _engine.connect()
-    trans = await connection.begin()
-
     session_maker = async_sessionmaker(
-        connection,
+        bind=_engine,
         expire_on_commit=False,
+        autoflush=False,
+        autocommit=False,
     )
-    session = session_maker()
 
-    try:
+    async with session_maker() as session, session.begin():
         yield session
-    finally:
-        await session.close()
-        await trans.rollback()
-        await connection.close()
+        # Transaction will automatically roll back
 
 
 @pytest.fixture
@@ -105,10 +96,9 @@ def fastapi_app(
     return application
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(
     fastapi_app: FastAPI,
-    anyio_backend: Any,
 ) -> AsyncGenerator[AsyncClient, None]:
     """
     Fixture that creates client for requesting server.
@@ -124,11 +114,19 @@ async def client(
         yield ac
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def app() -> FastAPI:
     """Create a FastAPI app for testing."""
     app = FastAPI()
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+        app.state.db_session_factory = get_session_factory()
+        yield
+
+    app.router.lifespan_context = lifespan
     app.include_router(product_router)
+
     return app
 
 
@@ -256,7 +254,7 @@ def compare_product_dto_with_response() -> callable:
     return _compare
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def test_app() -> FastAPI:
     """Create a test instance of the FastAPI application."""
     return get_app()

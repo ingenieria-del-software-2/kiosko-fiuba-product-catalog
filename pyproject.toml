@@ -71,6 +71,10 @@ env = [
     "PRODUCT_CATALOG_ENVIRONMENT=pytest",
     "PRODUCT_CATALOG_DB_BASE=product_catalog_test",
 ]
+markers = ["asyncio: mark a test as an asyncio coroutine"]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+asyncio_mode = "auto"
 
 [tool.ruff]
 # List of enabled rulsets.
@@ -164,5 +168,8 @@ cookie_auth = "None"
 jwt_auth = "None"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.0.0", "setuptools>=45", "wheel", "build>=0.7"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest-asyncio]
+mode = "auto"

@@ -1,35 +1,31 @@
 """Configuration for product repository tests."""
 
-import asyncio
-from typing import AsyncGenerator, Generator
+from typing import AsyncGenerator
 
-import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
+    async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.orm import sessionmaker
 
 from src.shared.database.base import Base
 
 
-@pytest.fixture(scope="session")
-def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
-    """Create an instance of the default event loop for each test case.
-
-    Ref: https://github.com/pytest-dev/pytest-asyncio/issues/68#issuecomment-334078447
-    """
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
-
-
-@pytest.fixture(scope="session")
+# Use function scope for all fixtures - no shared state between tests
+@pytest_asyncio.fixture(scope="function")
 async def db_engine() -> AsyncGenerator[AsyncEngine, None]:
     """Create a SQLAlchemy engine for testing."""
-    # Use an in-memory SQLite database for testing
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
+    # Use SQLite for tests with enable_parentheses_parsing to handle more complex SQL
+    engine = create_async_engine(
+        "sqlite+aiosqlite:///:memory:",
+        connect_args={
+            "check_same_thread": False,  # Allow multi-threaded access
+        },
+        # Don't echo all SQL for cleaner test output
+        echo=False,
+    )
 
     # Create all tables
     async with engine.begin() as conn:
@@ -41,18 +37,30 @@ async def db_engine() -> AsyncGenerator[AsyncEngine, None]:
     await engine.dispose()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture(scope="function")
 async def db_session(db_engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
-    """Create a SQLAlchemy session for testing."""
-    # Create a session factory
-    async_session = sessionmaker(
-        db_engine,
-        class_=AsyncSession,
+    """Create a SQLAlchemy session for testing.
+
+    This fixture creates an isolated session for each test with its own transaction
+    that is rolled back at the end to prevent test data from persisting.
+    """
+    # Create a session factory that's bound to our engine with better async support
+    session_factory = async_sessionmaker(
+        bind=db_engine,
         expire_on_commit=False,
+        autoflush=False,
+        autocommit=False,
+        # Make sure future is used for SQLAlchemy 2.0 compatibility
+        future=True,
     )
 
-    # Create a new session for the test
-    async with async_session() as session:
+    # Create a new session for each test
+    session = session_factory()
+
+    # Start a transaction
+    async with session.begin() as transaction:
+        # Give the session to the test
         yield session
-        # Roll back any changes made during the test
-        await session.rollback()
+
+        # Always roll back at the end
+        await transaction.rollback()
