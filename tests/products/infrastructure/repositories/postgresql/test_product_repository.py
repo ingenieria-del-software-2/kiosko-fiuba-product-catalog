@@ -286,7 +286,7 @@ async def test_list_products(
 
     # Create a product
     created_product = await repository.create(product_create_dto)
-    
+
     # Verify the product was created successfully
     assert created_product is not None
     assert created_product.name == product_create_dto.name

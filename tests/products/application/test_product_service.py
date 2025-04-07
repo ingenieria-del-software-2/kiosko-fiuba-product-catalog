@@ -2,6 +2,11 @@
 
 import uuid
 from decimal import Decimal
+from typing import (
+    Any,
+    Optional,
+    Tuple,
+)
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -14,7 +19,6 @@ from src.products.application.dtos.product_dtos import (
 )
 from src.products.application.services.product_service import ProductService
 from src.products.domain.entities.product import Product
-from src.products.domain.exceptions.domain_exceptions import ProductNotFoundError
 
 
 @pytest.fixture
@@ -71,8 +75,10 @@ def sample_product(product_id: uuid.UUID) -> Product:
 
 @pytest.fixture
 def mocked_repos(
-    product_id: uuid.UUID, category_id: uuid.UUID, sample_product: Product
-):
+    product_id: uuid.UUID,
+    category_id: uuid.UUID,
+    sample_product: Product,
+) -> Tuple[AsyncMock, AsyncMock, AsyncMock]:
     """Create mocked repositories for testing."""
     product_repo = AsyncMock()
     category_repo = AsyncMock()
@@ -87,31 +93,29 @@ def mocked_repos(
     product_repo.list.return_value = ([sample_product], 1)
 
     # Handle special cases for not found
-    def get_by_id_side_effect(pid):
+    def get_by_id_side_effect(pid: uuid.UUID) -> Optional[Product]:
         if pid == uuid.UUID("00000000-0000-0000-0000-000000000000"):
             return None
         return sample_product
 
     product_repo.get_by_id.side_effect = get_by_id_side_effect
 
-    def get_by_sku_side_effect(sku):
+    def get_by_sku_side_effect(sku: str) -> Optional[Product]:
         if sku == "NONEXISTENT-SKU":
             return None
         return sample_product
 
     product_repo.get_by_sku.side_effect = get_by_sku_side_effect
 
-    def update_side_effect(pid, data):
+    def update_side_effect(pid: uuid.UUID, data: Any) -> Optional[Product]:
         if pid == uuid.UUID("00000000-0000-0000-0000-000000000000"):
             return None
         return sample_product
 
     product_repo.update.side_effect = update_side_effect
 
-    def delete_side_effect(pid):
-        if pid == uuid.UUID("00000000-0000-0000-0000-000000000000"):
-            return False
-        return True
+    def delete_side_effect(pid: uuid.UUID) -> bool:
+        return pid != uuid.UUID("00000000-0000-0000-0000-000000000000")
 
     product_repo.delete.side_effect = delete_side_effect
 
@@ -122,7 +126,9 @@ def mocked_repos(
 
 
 @pytest.fixture
-def product_service(mocked_repos):
+def product_service(
+    mocked_repos: Tuple[AsyncMock, AsyncMock, AsyncMock],
+) -> ProductService:
     """Create the product service with mocked dependencies."""
     product_repo, category_repo, event_publisher = mocked_repos
     return ProductService(
@@ -134,7 +140,9 @@ def product_service(mocked_repos):
 
 @pytest.mark.asyncio
 async def test_product_service_create(
-    product_service, mocked_repos, category_id
+    product_service: ProductService,
+    mocked_repos: Tuple[AsyncMock, AsyncMock, AsyncMock],
+    category_id: uuid.UUID,
 ) -> None:
     """Test the create_product method of the product service."""
     product_repo, _, event_publisher = mocked_repos
@@ -189,7 +197,9 @@ async def test_product_service_create(
 
 @pytest.mark.asyncio
 async def test_get_product_by_id_success(
-    product_service, mocked_repos, product_id
+    product_service: ProductService,
+    mocked_repos: Tuple[AsyncMock, AsyncMock, AsyncMock],
+    product_id: uuid.UUID,
 ) -> None:
     """Test getting a product by ID successfully."""
     product_repo, _, _ = mocked_repos
@@ -206,7 +216,10 @@ async def test_get_product_by_id_success(
 
 
 @pytest.mark.asyncio
-async def test_get_product_by_id_not_found(product_service, mocked_repos) -> None:
+async def test_get_product_by_id_not_found(
+    product_service: ProductService,
+    mocked_repos: Tuple[AsyncMock, AsyncMock, AsyncMock],
+) -> None:
     """Test getting a product by ID when it doesn't exist."""
     product_repo, _, _ = mocked_repos
     non_existent_id = uuid.UUID("00000000-0000-0000-0000-000000000000")
@@ -222,7 +235,10 @@ async def test_get_product_by_id_not_found(product_service, mocked_repos) -> Non
 
 
 @pytest.mark.asyncio
-async def test_get_product_by_sku_success(product_service, mocked_repos) -> None:
+async def test_get_product_by_sku_success(
+    product_service: ProductService,
+    mocked_repos: Tuple[AsyncMock, AsyncMock, AsyncMock],
+) -> None:
     """Test getting a product by SKU successfully."""
     product_repo, _, _ = mocked_repos
     sku = "TEST-SKU-123"
@@ -239,7 +255,10 @@ async def test_get_product_by_sku_success(product_service, mocked_repos) -> None
 
 
 @pytest.mark.asyncio
-async def test_get_product_by_sku_not_found(product_service, mocked_repos) -> None:
+async def test_get_product_by_sku_not_found(
+    product_service: ProductService,
+    mocked_repos: Tuple[AsyncMock, AsyncMock, AsyncMock],
+) -> None:
     """Test getting a product by SKU when it doesn't exist."""
     product_repo, _, _ = mocked_repos
     non_existent_sku = "NONEXISTENT-SKU"
@@ -256,7 +275,9 @@ async def test_get_product_by_sku_not_found(product_service, mocked_repos) -> No
 
 @pytest.mark.asyncio
 async def test_update_product_success(
-    product_service, mocked_repos, product_id
+    product_service: ProductService,
+    mocked_repos: Tuple[AsyncMock, AsyncMock, AsyncMock],
+    product_id: uuid.UUID,
 ) -> None:
     """Test updating a product successfully."""
     product_repo, _, _ = mocked_repos
@@ -278,7 +299,10 @@ async def test_update_product_success(
 
 
 @pytest.mark.asyncio
-async def test_update_product_not_found(product_service, mocked_repos) -> None:
+async def test_update_product_not_found(
+    product_service: ProductService,
+    mocked_repos: Tuple[AsyncMock, AsyncMock, AsyncMock],
+) -> None:
     """Test updating a product when it doesn't exist."""
     product_repo, _, _ = mocked_repos
     non_existent_id = uuid.UUID("00000000-0000-0000-0000-000000000000")
@@ -301,7 +325,9 @@ async def test_update_product_not_found(product_service, mocked_repos) -> None:
 
 @pytest.mark.asyncio
 async def test_delete_product_success(
-    product_service, mocked_repos, product_id
+    product_service: ProductService,
+    mocked_repos: Tuple[AsyncMock, AsyncMock, AsyncMock],
+    product_id: uuid.UUID,
 ) -> None:
     """Test deleting a product successfully."""
     product_repo, _, _ = mocked_repos
@@ -317,7 +343,10 @@ async def test_delete_product_success(
 
 
 @pytest.mark.asyncio
-async def test_delete_product_not_found(product_service, mocked_repos) -> None:
+async def test_delete_product_not_found(
+    product_service: ProductService,
+    mocked_repos: Tuple[AsyncMock, AsyncMock, AsyncMock],
+) -> None:
     """Test deleting a product when it doesn't exist."""
     product_repo, _, _ = mocked_repos
     non_existent_id = uuid.UUID("00000000-0000-0000-0000-000000000000")
@@ -333,7 +362,10 @@ async def test_delete_product_not_found(product_service, mocked_repos) -> None:
 
 
 @pytest.mark.asyncio
-async def test_list_products(product_service, mocked_repos) -> None:
+async def test_list_products(
+    product_service: ProductService,
+    mocked_repos: Tuple[AsyncMock, AsyncMock, AsyncMock],
+) -> None:
     """Test listing products with filters."""
     product_repo, _, _ = mocked_repos
 

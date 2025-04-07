@@ -15,8 +15,8 @@ def slugify(text: str) -> str:
         A URL-friendly slug
     """
     # Handle camel case by adding spaces before capital letters
-    text = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", text)
+    processed_text = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", text)
 
-    # Use the base slugify function with specific options
-    result: str = base_slugify(text, separator="-", lowercase=True)
-    return result
+    # Use the base slugify function with specific options and ensure string return type
+    slug_result: str = base_slugify(processed_text, separator="-", lowercase=True)
+    return slug_result
