@@ -4,7 +4,6 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dummy.application.services.dummy_service import DummyService
-from src.shared.database.dependencies import get_db_session
 from src.dummy.infrastructure.event_publisher.console.console_publisher import (
     ConsoleEventPublisher,
 )
@@ -17,6 +16,7 @@ from src.dummy.infrastructure.repositories.interfaces.dummy_repository import (
 from src.dummy.infrastructure.repositories.postgresql.dummy_repository import (
     PostgreSQLDummyRepository,
 )
+from src.shared.database.dependencies import get_db_session
 
 
 def get_dummy_repository(

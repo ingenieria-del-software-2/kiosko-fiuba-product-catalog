@@ -3,7 +3,7 @@
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import String
 
-from product_catalog.infrastructure.database.base import Base
+from src.shared.database.base import Base
 
 
 class DummyModel(Base):

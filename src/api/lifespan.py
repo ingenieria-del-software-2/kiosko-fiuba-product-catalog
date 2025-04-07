@@ -6,8 +6,8 @@ from typing import AsyncGenerator
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from src.shared.database.models import load_all_models
 from src.settings import settings
+from src.shared.database.models import load_all_models
 
 
 def _setup_db(app: FastAPI) -> None:

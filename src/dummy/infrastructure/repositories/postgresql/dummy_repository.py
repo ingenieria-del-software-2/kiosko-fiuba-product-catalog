@@ -7,11 +7,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dummy.domain.model.dummy import Dummy
-from src.shared.database.dependencies import get_db_session
-from src.shared.database.models.dummy_model import DummyModel
 from src.dummy.infrastructure.repositories.interfaces.dummy_repository import (
     DummyRepository,
 )
+from src.shared.database.dependencies import get_db_session
+from src.shared.database.models.dummy_model import DummyModel
 
 
 class PostgreSQLDummyRepository(DummyRepository):
