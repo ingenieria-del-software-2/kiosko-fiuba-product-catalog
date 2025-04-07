@@ -25,7 +25,10 @@ class CategoryDTO(BaseModel):
 
     model_config = ConfigDict(
         populate_by_name=True,
-        alias_generator=lambda field_name: "parentId" if field_name == "parent_id" else field_name
+        alias_generator=lambda field_name: (
+            "parentId" if field_name == "parent_id" 
+            else field_name
+        ),
     )
 
 
@@ -40,7 +43,10 @@ class ImageDTO(BaseModel):
 
     model_config = ConfigDict(
         populate_by_name=True,
-        alias_generator=lambda field_name: "isMain" if field_name == "is_main" else field_name
+        alias_generator=lambda field_name: (
+            "isMain" if field_name == "is_main" 
+            else field_name
+        ),
     )
 
 
@@ -58,9 +64,9 @@ class AttributeDTO(BaseModel):
         populate_by_name=True,
         alias_generator=lambda field_name: {
             "display_value": "displayValue",
-            "is_highlighted": "isHighlighted", 
-            "group_name": "groupName"
-        }.get(field_name, field_name)
+            "is_highlighted": "isHighlighted",
+            "group_name": "groupName",
+        }.get(field_name, field_name),
     )
 
 
@@ -72,13 +78,13 @@ class ConfigOptionValueDTO(BaseModel):
     is_available: bool = True
     is_selected: bool = False
     image: Optional[str] = None
-    
+
     model_config = ConfigDict(
         populate_by_name=True,
         alias_generator=lambda field_name: {
             "is_available": "isAvailable",
-            "is_selected": "isSelected"
-        }.get(field_name, field_name)
+            "is_selected": "isSelected",
+        }.get(field_name, field_name),
     )
 
 
@@ -97,11 +103,14 @@ class ShippingMethodDTO(BaseModel):
     name: str
     cost: float
     estimated_delivery_time: Dict[str, Any]
-    
+
     model_config = ConfigDict(
         populate_by_name=True,
-        alias_generator=lambda field_name: "estimatedDeliveryTime" 
-            if field_name == "estimated_delivery_time" else field_name
+        alias_generator=lambda field_name: (
+            "estimatedDeliveryTime"
+            if field_name == "estimated_delivery_time"
+            else field_name
+        ),
     )
 
 
@@ -111,14 +120,14 @@ class ShippingDTO(BaseModel):
     is_free: bool = False
     estimated_delivery_time: Dict[str, Any]
     available_shipping_methods: List[ShippingMethodDTO]
-    
+
     model_config = ConfigDict(
         populate_by_name=True,
         alias_generator=lambda field_name: {
             "is_free": "isFree",
             "estimated_delivery_time": "estimatedDeliveryTime",
-            "available_shipping_methods": "availableShippingMethods"
-        }.get(field_name, field_name)
+            "available_shipping_methods": "availableShippingMethods",
+        }.get(field_name, field_name),
     )
 
 
@@ -131,15 +140,15 @@ class SellerReputationDTO(BaseModel):
     completed_sales: int
     canceled_sales: int
     total_reviews: int
-    
+
     model_config = ConfigDict(
         populate_by_name=True,
         alias_generator=lambda field_name: {
             "total_sales": "totalSales",
             "completed_sales": "completedSales",
             "canceled_sales": "canceledSales",
-            "total_reviews": "totalReviews"
-        }.get(field_name, field_name)
+            "total_reviews": "totalReviews",
+        }.get(field_name, field_name),
     )
 
 
@@ -151,10 +160,13 @@ class SellerDTO(BaseModel):
     is_official: bool = False
     reputation: Optional[SellerReputationDTO] = None
     location: Optional[str] = None
-    
+
     model_config = ConfigDict(
         populate_by_name=True,
-        alias_generator=lambda field_name: "isOfficial" if field_name == "is_official" else field_name
+        alias_generator=lambda field_name: (
+            "isOfficial" if field_name == "is_official" 
+            else field_name
+        ),
     )
 
 
@@ -197,14 +209,14 @@ class ReviewDTO(BaseModel):
     is_verified_purchase: bool = False
     likes: int = 0
     attributes: Optional[List[ReviewAttributeDTO]] = None
-    
+
     model_config = ConfigDict(
         populate_by_name=True,
         alias_generator=lambda field_name: {
             "user_id": "userId",
             "user_name": "userName",
-            "is_verified_purchase": "isVerifiedPurchase"
-        }.get(field_name, field_name)
+            "is_verified_purchase": "isVerifiedPurchase",
+        }.get(field_name, field_name),
     )
 
 
@@ -215,13 +227,13 @@ class InstallmentDTO(BaseModel):
     amount: float
     interest_rate: float
     total_amount: float
-    
+
     model_config = ConfigDict(
         populate_by_name=True,
         alias_generator=lambda field_name: {
             "interest_rate": "interestRate",
-            "total_amount": "totalAmount"
-        }.get(field_name, field_name)
+            "total_amount": "totalAmount",
+        }.get(field_name, field_name),
     )
 
 
@@ -242,10 +254,13 @@ class WarrantyDTO(BaseModel):
     unit: Optional[str] = None
     type: Optional[str] = None
     description: Optional[str] = None
-    
+
     model_config = ConfigDict(
         populate_by_name=True,
-        alias_generator=lambda field_name: "hasWarranty" if field_name == "has_warranty" else field_name
+        alias_generator=lambda field_name: (
+            "hasWarranty" if field_name == "has_warranty" 
+            else field_name
+        ),
     )
 
 
@@ -258,14 +273,14 @@ class PromotionDTO(BaseModel):
     discount_percentage: Optional[float] = None
     valid_from: datetime
     valid_to: datetime
-    
+
     model_config = ConfigDict(
         populate_by_name=True,
         alias_generator=lambda field_name: {
             "discount_percentage": "discountPercentage",
             "valid_from": "validFrom",
-            "valid_to": "validTo"
-        }.get(field_name, field_name)
+            "valid_to": "validTo",
+        }.get(field_name, field_name),
     )
 
 
@@ -283,14 +298,14 @@ class ProductVariantDTO(BaseModel):
     is_selected: bool = False
     image: Optional[str] = None
     images: Optional[List[ImageDTO]] = None
-    
+
     model_config = ConfigDict(
         populate_by_name=True,
         alias_generator=lambda field_name: {
             "compare_at_price": "compareAtPrice",
             "is_available": "isAvailable",
-            "is_selected": "isSelected"
-        }.get(field_name, field_name)
+            "is_selected": "isSelected",
+        }.get(field_name, field_name),
     )
 
 
@@ -341,8 +356,8 @@ class ProductResponseDTO(BaseModel):
             "has_variants": "hasVariants",
             "config_options": "configOptions",
             "payment_options": "paymentOptions",
-            "highlighted_features": "highlightedFeatures"
-        }.get(field_name, field_name)
+            "highlighted_features": "highlightedFeatures",
+        }.get(field_name, field_name),
     )
 
     @classmethod
@@ -399,8 +414,8 @@ class ProductCreateDTO(BaseModel):
             "is_refurbished": "isRefurbished",
             "has_variants": "hasVariants",
             "config_options": "configOptions",
-            "highlighted_features": "highlightedFeatures"
-        }.get(field_name, field_name)
+            "highlighted_features": "highlightedFeatures",
+        }.get(field_name, field_name),
     )
 
     @field_validator("slug", mode="before")
@@ -422,36 +437,40 @@ class ProductUpdateDTO(BaseModel):
     description: Optional[str] = None
     summary: Optional[str] = None
     price: Optional[float] = None
-    compareAtPrice: Optional[float] = None
     compare_at_price: Optional[float] = None
     currency: Optional[str] = None
     brand_id: Optional[uuid.UUID] = None
     model: Optional[str] = None
     sku: Optional[str] = None
     stock: Optional[int] = None
-    isAvailable: Optional[bool] = None
     is_available: Optional[bool] = None
-    isNew: Optional[bool] = None
     is_new: Optional[bool] = None
-    isRefurbished: Optional[bool] = None
     is_refurbished: Optional[bool] = None
     condition: Optional[str] = None
     category_ids: Optional[List[uuid.UUID]] = None
     tags: Optional[List[str]] = None
     images: Optional[List[Dict[str, Any]]] = None
     attributes: Optional[List[Dict[str, Any]]] = None
-    hasVariants: Optional[bool] = None
     has_variants: Optional[bool] = None
     variants: Optional[List[Dict[str, Any]]] = None
-    configOptions: Optional[List[Dict[str, Any]]] = None
     config_options: Optional[List[Dict[str, Any]]] = None
     shipping: Optional[Dict[str, Any]] = None
     seller_id: Optional[str] = None
     warranty: Optional[Dict[str, Any]] = None
-    highlightedFeatures: Optional[List[str]] = None
     highlighted_features: Optional[List[str]] = None
 
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(
+        populate_by_name=True,
+        alias_generator=lambda field_name: {
+            "compare_at_price": "compareAtPrice",
+            "is_available": "isAvailable",
+            "is_new": "isNew",
+            "is_refurbished": "isRefurbished",
+            "has_variants": "hasVariants",
+            "config_options": "configOptions",
+            "highlighted_features": "highlightedFeatures"
+        }.get(field_name, field_name)
+    )
 
 
 class BrandCreateDTO(BaseModel):
@@ -504,17 +523,6 @@ class ProductFilterDTO(BaseModel):
     category_id: Optional[uuid.UUID] = None
     brand_id: Optional[uuid.UUID] = None
     price_min: Optional[float] = None
-    price_max: Optional[float] = None
-    search: Optional[str] = None
-    tags: Optional[List[str]] = None
-    is_available: Optional[bool] = None
-    is_new: Optional[bool] = None
-    condition: Optional[str] = None
-    sort_by: Optional[str] = None
-    sort_order: Optional[str] = "asc"
-    limit: Optional[int] = 10
-    offset: Optional[int] = 0
-
     price_max: Optional[float] = None
     search: Optional[str] = None
     tags: Optional[List[str]] = None
