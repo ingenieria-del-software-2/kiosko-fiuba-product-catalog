@@ -6,7 +6,7 @@ from dataclasses import asdict
 from datetime import datetime
 from typing import Any
 
-from product_catalog.infrastructure.event_publisher.interfaces.event_publisher import (
+from src.dummy.infrastructure.event_publisher.interfaces.event_publisher import (
     EventPublisher,
 )
 

@@ -10,8 +10,8 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from product_catalog.api.app import get_app
-from product_catalog.infrastructure.database.dependencies import get_db_session
+from src.api.app import get_app
+from src.shared.database.dependencies import get_db_session
 
 
 @pytest.fixture(scope="session")
@@ -31,8 +31,8 @@ async def _engine() -> AsyncGenerator[AsyncEngine, None]:
 
     :yield: new engine.
     """
-    from product_catalog.infrastructure.database.base import Base
-    from product_catalog.infrastructure.database.models import load_all_models
+    from src.shared.database.base import Base
+    from src.shared.database.models import load_all_models
 
     # Load models first
     load_all_models()

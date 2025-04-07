@@ -4,10 +4,10 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from product_catalog.api.dependencies import get_dummy_service
-from product_catalog.application.dtos.dummy_dtos import CreateDummyDTO, DummyDTO
-from product_catalog.application.services.dummy_service import DummyService
-from product_catalog.domain.exceptions.domain_exceptions import DummyNotFoundError
+from src.api.dependencies import get_dummy_service
+from src.dummy.application.dtos.dummy_dtos import CreateDummyDTO, DummyDTO
+from src.dummy.application.services.dummy_service import DummyService
+from src.dummy.domain.exceptions.domain_exceptions import DummyNotFoundError
 
 router = APIRouter()
 

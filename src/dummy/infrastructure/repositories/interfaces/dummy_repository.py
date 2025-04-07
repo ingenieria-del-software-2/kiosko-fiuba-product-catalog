@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 
-from product_catalog.domain.model.dummy import Dummy
+from src.dummy.domain.model.dummy import Dummy
 
 
 class DummyRepository(ABC):

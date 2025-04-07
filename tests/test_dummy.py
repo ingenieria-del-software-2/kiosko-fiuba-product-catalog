@@ -6,8 +6,8 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from product_catalog.domain.model.dummy import Dummy
-from product_catalog.infrastructure.repositories.postgresql.dummy_repository import (
+from src.dummy.domain.model.dummy import Dummy
+from src.dummy.infrastructure.repositories.postgresql.dummy_repository import (
     PostgreSQLDummyRepository,
 )
 
