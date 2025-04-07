@@ -1,0 +1,372 @@
+{
+  "id": "123e4567-e89b-12d3-a456-426614174001",
+  "sku": "DELL-INSP-3520-I3-8GB-512",
+  "name": "Notebook Dell Inspiron 15 3520 15.6 8gb Ram 512gb Ssd Color Negro",
+  "slug": "notebook-dell-inspiron-15-3520-8gb-512gb",
+  "description": "<p>La notebook Dell Inspiron 15 3520 es la compañera ideal para tus tareas diarias, combinando rendimiento confiable y diseño elegante.</p><h3>Características principales:</h3><ul><li>Procesador Intel Core i3 1215U de 12ª generación (hasta 4.4 GHz)</li><li>8GB de memoria RAM DDR4 (expandible hasta 16GB)</li><li>Almacenamiento SSD de 512GB para un arranque rápido y amplio espacio</li><li>Pantalla Full HD de 15.6\" (1920 x 1080) con tecnología antirreflejo</li><li>Gráficos Intel UHD integrados</li><li>Windows 11 Home preinstalado</li><li>Batería de larga duración (hasta 7 horas de uso normal)</li><li>Conectividad completa: WiFi, Bluetooth, HDMI, USB 3.0</li><li>Teclado numérico integrado</li><li>Cámara HD y micrófono integrados</li></ul>",
+  "summary": "Notebook Dell Inspiron 15 3520 con procesador Intel Core i3, 8GB RAM, 512GB SSD y pantalla Full HD de 15.6 pulgadas. Ideal para trabajo y estudio.",
+  "brand": {
+    "id": "123e4567-e89b-12d3-a456-426614174101",
+    "name": "Dell",
+    "logo": "/brands/dell-logo.png"
+  },
+  "model": "Inspiron 15 3520",
+  "price": 9599.99,
+  "compareAtPrice": 10999.99,
+  "currency": "ARS",
+  "stock": 50,
+  "isAvailable": true,
+  "isNew": true,
+  "isRefurbished": false,
+  "condition": "new",
+  "categories": [
+    {
+      "id": "cat1",
+      "name": "Computación",
+      "slug": "computacion"
+    },
+    {
+      "id": "cat2",
+      "name": "Notebooks y Accesorios",
+      "slug": "notebooks-y-accesorios",
+      "parentId": "cat1"
+    },
+    {
+      "id": "cat3",
+      "name": "Notebooks",
+      "slug": "notebooks",
+      "parentId": "cat2"
+    },
+    {
+      "id": "cat4",
+      "name": "Notebooks Dell",
+      "slug": "notebooks-dell",
+      "parentId": "cat3"
+    }
+  ],
+  "tags": ["laptop", "notebook", "dell", "inspiron", "intel", "windows 11", "computadora"],
+  "images": [
+    {
+      "id": "img1",
+      "url": "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-DpbgguUV1vH8YkXMYntRtDcxSDx5yn.png",
+      "alt": "Dell Inspiron 15 3520 - Vista frontal",
+      "isMain": true,
+      "order": 1
+    },
+    {
+      "id": "img2",
+      "url": "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-GUEvjUnZPMsMUbPbAWOFohlOSV2iZE.png",
+      "alt": "Dell Inspiron 15 3520 - Vista en ángulo con teclado",
+      "isMain": false,
+      "order": 2
+    },
+    {
+      "id": "img3",
+      "url": "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-OydAoInnWHSLmTn7Xyf4ikcIPUwbcc.png",
+      "alt": "Dell Inspiron 15 3520 - Vista lateral",
+      "isMain": false,
+      "order": 3
+    },
+    {
+      "id": "img4",
+      "url": "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-ntNRI6gVMYfiY1t6INIiKmpdKcEPtQ.png",
+      "alt": "Dell Inspiron 15 3520 - Vista superior cerrada",
+      "isMain": false,
+      "order": 4
+    },
+    {
+      "id": "img5",
+      "url": "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-NctTXYhGw0i625k1ZpJ8Jhsp9l8TMs.png",
+      "alt": "Dell Inspiron 15 3520 - Vista de perfil",
+      "isMain": false,
+      "order": 5
+    }
+  ],
+  "attributes": [
+    {
+      "id": "attr1",
+      "name": "Procesador",
+      "value": "Intel Core i3 1215U",
+      "displayValue": "Intel Core i3 1215U",
+      "isHighlighted": true,
+      "groupName": "Procesador"
+    },
+    {
+      "id": "attr2",
+      "name": "Memoria RAM",
+      "value": "8GB",
+      "displayValue": "8 GB",
+      "isHighlighted": true,
+      "groupName": "Memoria"
+    },
+    {
+      "id": "attr3",
+      "name": "Almacenamiento",
+      "value": "512GB SSD",
+      "displayValue": "512 GB SSD",
+      "isHighlighted": true,
+      "groupName": "Almacenamiento"
+    },
+    {
+      "id": "attr4",
+      "name": "Sistema operativo",
+      "value": "Windows 11 Home",
+      "displayValue": "Windows 11 Home",
+      "isHighlighted": true,
+      "groupName": "Software"
+    },
+    {
+      "id": "attr5",
+      "name": "Tamaño de pantalla",
+      "value": "15.6",
+      "displayValue": "15.6 pulgadas",
+      "isHighlighted": true,
+      "groupName": "Pantalla"
+    },
+    {
+      "id": "attr6",
+      "name": "Resolución de pantalla",
+      "value": "1920x1080",
+      "displayValue": "1920 px x 1080 px (Full HD)",
+      "isHighlighted": true,
+      "groupName": "Pantalla"
+    }
+  ],
+  "hasVariants": true,
+  "variants": [
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174201",
+      "sku": "DELL-INSP-3520-I3-8GB-512-WIN",
+      "name": "8 GB RAM | 512 GB SSD",
+      "price": 9599.99,
+      "compareAtPrice": 10999.99,
+      "attributes": {
+        "Capacidad": "8GB RAM | 512GB SSD",
+        "Sistema operativo": "Windows 11 Home",
+        "Procesador": "Intel Core i3 1215U",
+        "Resolución de pantalla": "1920 px x 1080 px",
+        "Placa de video": "Intel UHD Graphics"
+      },
+      "stock": 50,
+      "isAvailable": true,
+      "isSelected": true
+    },
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174202",
+      "sku": "DELL-INSP-3520-I3-12GB-256-WIN",
+      "name": "12 GB RAM | 256 GB SSD",
+      "price": 9799.99,
+      "compareAtPrice": 11199.99,
+      "attributes": {
+        "Capacidad": "12GB RAM | 256GB SSD",
+        "Sistema operativo": "Windows 11 Home",
+        "Procesador": "Intel Core i3 1215U",
+        "Resolución de pantalla": "1920 px x 1080 px",
+        "Placa de video": "Intel UHD Graphics"
+      },
+      "stock": 35,
+      "isAvailable": true
+    },
+    {
+      "id": "var3",
+      "sku": "DELL-INSP-3520-I5-16GB-512-WIN",
+      "name": "16 GB RAM | 512 GB SSD",
+      "price": 1159999,
+      "compareAtPrice": 1299999,
+      "attributes": {
+        "Capacidad": "16GB RAM | 512GB SSD",
+        "Sistema operativo": "Windows 11 Home",
+        "Procesador": "Intel Core i5 1135G7",
+        "Resolución de pantalla": "1920 px x 1080 px",
+        "Placa de video": "Intel UHD Graphics"
+      },
+      "stock": 20,
+      "isAvailable": true
+    }
+  ],
+  "configOptions": [
+    {
+      "id": "config-capacity",
+      "name": "Capacidad",
+      "values": [
+        { "id": "8gb-512gb", "value": "8GB RAM | 512GB SSD", "isAvailable": true, "isSelected": true },
+        { "id": "12gb-256gb", "value": "12GB RAM | 256GB SSD", "isAvailable": true },
+        { "id": "16gb-512gb", "value": "16GB RAM | 512GB SSD", "isAvailable": true }
+      ]
+    },
+    {
+      "id": "config-os",
+      "name": "Sistema operativo",
+      "values": [
+        { "id": "linux", "value": "Linux", "isAvailable": true },
+        { "id": "windows-11", "value": "Windows 11 Home", "isAvailable": true, "isSelected": true }
+      ]
+    },
+    {
+      "id": "config-processor",
+      "name": "Procesador",
+      "values": [
+        { "id": "intel-i3-1215u", "value": "Intel Core i3 1215U", "isAvailable": true, "isSelected": true },
+        { "id": "intel-i3-1115", "value": "Intel Core i3 1115", "isAvailable": true },
+        { "id": "intel-i5-1135g7", "value": "Intel Core i5 1135G7", "isAvailable": true }
+      ]
+    }
+  ],
+  "shipping": {
+    "isFree": true,
+    "estimatedDeliveryTime": {
+      "min": 2,
+      "max": 3,
+      "unit": "day"
+    },
+    "availableShippingMethods": [
+      {
+        "id": "shipping1",
+        "name": "Envío estándar",
+        "cost": 0,
+        "estimatedDeliveryTime": {
+          "min": 2,
+          "max": 3,
+          "unit": "day"
+        }
+      },
+      {
+        "id": "shipping2",
+        "name": "Envío express",
+        "cost": 1500,
+        "estimatedDeliveryTime": {
+          "min": 24,
+          "max": 48,
+          "unit": "hour"
+        }
+      }
+    ]
+  },
+  "seller": {
+    "id": "seller1",
+    "name": "FULLSTOREONLINE",
+    "isOfficial": true,
+    "reputation": {
+      "level": "platinum",
+      "score": 4.8,
+      "totalSales": 5243,
+      "completedSales": 5198,
+      "canceledSales": 45,
+      "totalReviews": 4876
+    },
+    "location": "Capital Federal"
+  },
+  "rating": {
+    "average": 4.7,
+    "count": 2948,
+    "distribution": {
+      "1": 59,
+      "2": 88,
+      "3": 147,
+      "4": 442,
+      "5": 2212
+    }
+  },
+  "reviews": [
+    {
+      "id": "review1",
+      "userId": "user1",
+      "userName": "Juan P.",
+      "rating": 5,
+      "title": "Excelente notebook para el uso diario",
+      "comment": "Excelente notebook para el uso diario. La compré hace un mes y estoy muy satisfecho con el rendimiento. El procesador i3 es más que suficiente para tareas de oficina, navegación web y streaming.",
+      "date": "2024-06-20T00:00:00.000Z",
+      "isVerifiedPurchase": true,
+      "likes": 26,
+      "attributes": [
+        {
+          "name": "Relación precio-calidad",
+          "rating": 5
+        },
+        {
+          "name": "Rendimiento",
+          "rating": 4
+        },
+        {
+          "name": "Calidad de los materiales",
+          "rating": 4
+        }
+      ]
+    },
+    {
+      "id": "review2",
+      "userId": "user2",
+      "userName": "María L.",
+      "rating": 4,
+      "comment": "Muy buena notebook para uso diario y tareas de oficina. La batería dura aproximadamente 5 horas con uso normal.",
+      "date": "2024-06-15T00:00:00.000Z",
+      "isVerifiedPurchase": true,
+      "likes": 18
+    }
+  ],
+  "paymentOptions": [
+    {
+      "id": "payment1",
+      "type": "credit_card",
+      "name": "Tarjeta de crédito",
+      "installments": [
+        {
+          "quantity": 1,
+          "amount": 959999,
+          "interestRate": 0,
+          "totalAmount": 959999
+        },
+        {
+          "quantity": 3,
+          "amount": 319999.67,
+          "interestRate": 0,
+          "totalAmount": 959999
+        },
+        {
+          "quantity": 6,
+          "amount": 159999.83,
+          "interestRate": 0,
+          "totalAmount": 959999
+        },
+        {
+          "quantity": 12,
+          "amount": 79999.92,
+          "interestRate": 0,
+          "totalAmount": 959999
+        }
+      ]
+    }
+  ],
+  "warranty": {
+    "hasWarranty": true,
+    "length": 12,
+    "unit": "month",
+    "type": "manufacturer",
+    "description": "Garantía de fábrica: 12 meses"
+  },
+  "promotions": [
+    {
+      "id": "promo1",
+      "type": "discount",
+      "description": "10% de descuento pagando con Mercado Crédito",
+      "discountPercentage": 10,
+      "validFrom": "2024-01-01T00:00:00.000Z",
+      "validTo": "2024-12-31T00:00:00.000Z"
+    },
+    {
+      "id": "promo2",
+      "type": "shipping",
+      "description": "Envío gratis a todo el país",
+      "validFrom": "2024-01-01T00:00:00.000Z",
+      "validTo": "2024-12-31T00:00:00.000Z"
+    }
+  ],
+  "highlightedFeatures": [
+    "Procesador Intel Core i3 1215U de 12ª generación",
+    "8GB de memoria RAM DDR4 (expandible hasta 16GB)",
+    "Almacenamiento SSD de 512GB",
+    "Pantalla Full HD de 15.6\" (1920 x 1080)",
+    "Windows 11 Home preinstalado",
+    "Batería de larga duración (hasta 7 horas)"
+  ]
+}

@@ -1,210 +1,613 @@
-"""PostgreSQL implementation of ProductRepository."""
+"""Implementation of a ProductRepository using PostgreSQL."""
 
+import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional, cast
-from uuid import UUID
+from typing import List, Optional, Tuple
 
-from sqlalchemy import select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload, selectinload
 
-from src.products.domain.model.product import Product
-from src.products.domain.model.value_objects import Money, ProductStatus
+from src.products.application.dtos.product_dtos import (
+    ProductCreateDTO,
+    ProductFilterDTO,
+    ProductUpdateDTO,
+)
+from src.products.domain.entities.product import Product
 from src.products.domain.repositories.product_repository import ProductRepository
-from src.products.infrastructure.repositories.postgresql.models import ProductModel
+from src.products.infrastructure.repositories.postgresql.models import (
+    CategoryModel,
+    ConfigOptionModel,
+    ProductImageModel,
+    ProductModel,
+    ProductVariantModel,
+    product_categories,
+)
 
 
-class PostgresProductRepository(ProductRepository):
-    """PostgreSQL implementation of the ProductRepository interface."""
+class PostgreSQLProductRepository(ProductRepository):
+    """PostgreSQL implementation of ProductRepository."""
 
     def __init__(self, session: AsyncSession) -> None:
-        """Initialize with database session."""
+        """Initialize repository with database session.
+
+        Args:
+            session: SQLAlchemy async session
+        """
         self._session = session
 
-    async def create(self, product: Product) -> Product:
-        """Create a new product in the database."""
-        # Convert domain model to ORM model
+    async def create(self, product_dto: ProductCreateDTO) -> Product:
+        """Create a new product.
+
+        Args:
+            product_dto: DTO with product data
+
+        Returns:
+            Created product entity
+        """
+        # Create the product model
         product_model = ProductModel(
-            id=product.id,
-            name=product.name,
-            description=product.description,
-            price_amount=product.price.amount,
-            price_currency=product.price.currency,
-            category_id=product.category_id,
-            sku=product.sku,
-            status=product.status.value,
-            images=product.images,
-            tags=product.tags,
-            attributes=product.attributes,
-            created_at=product.created_at,
-            updated_at=product.updated_at,
+            name=product_dto.name,
+            slug=product_dto.slug,
+            description=product_dto.description,
+            summary=product_dto.summary,
+            price_amount=product_dto.price,
+            price_currency=product_dto.currency,
+            compare_at_price=product_dto.compareAtPrice,
+            brand_id=product_dto.brand_id,
+            model=product_dto.model,
+            sku=product_dto.sku,
+            stock=product_dto.stock,
+            is_available=product_dto.isAvailable,
+            is_new=product_dto.isNew,
+            is_refurbished=product_dto.isRefurbished,
+            condition=product_dto.condition,
+            has_variants=product_dto.hasVariants,
+            tags=product_dto.tags,
+            attributes=product_dto.attributes,
+            highlighted_features=product_dto.highlightedFeatures,
+            shipping=product_dto.shipping,
+            warranty=product_dto.warranty,
         )
 
-        # Add to session and commit
         self._session.add(product_model)
-        await self._session.commit()
-        await self._session.refresh(product_model)
 
-        # Convert back to domain model and return
-        return self._to_domain(product_model)
+        # Add categories
+        if product_dto.category_ids:
+            stmt = select(CategoryModel).where(
+                CategoryModel.id.in_(product_dto.category_ids),
+            )
+            categories = (await self._session.execute(stmt)).scalars().all()
+            product_model.categories = categories
 
-    async def update(self, product: Product) -> Product:
-        """Update an existing product in the database."""
-        # Fetch existing product
-        query = select(ProductModel).where(ProductModel.id == product.id)
-        result = await self._session.execute(query)
-        product_model = result.scalar_one_or_none()
+        # Add images
+        if product_dto.images:
+            for image_data in product_dto.images:
+                image = ProductImageModel(
+                    product_id=product_model.id,
+                    url=image_data["url"],
+                    alt=image_data.get("alt"),
+                    is_main=image_data.get("isMain", False),
+                    order=image_data.get("order", 0),
+                )
+                self._session.add(image)
 
-        if not product_model:
-            raise ValueError(f"Product with ID {product.id} not found")
+        # Add variants
+        if product_dto.variants:
+            for variant_data in product_dto.variants:
+                variant = ProductVariantModel(
+                    parent_product_id=product_model.id,
+                    name=variant_data["name"],
+                    sku=variant_data["sku"],
+                    price_amount=variant_data["price"],
+                    price_currency=product_dto.currency,
+                    compare_at_price=variant_data.get("compareAtPrice"),
+                    stock=variant_data.get("stock", 0),
+                    is_available=variant_data.get("isAvailable", True),
+                    is_selected=variant_data.get("isSelected", False),
+                    attributes=variant_data.get("attributes", {}),
+                )
+                self._session.add(variant)
 
-        # Update fields - using setattr to avoid type errors
-        product_model.name = product.name
-        product_model.description = product.description
-        product_model.price_amount = product.price.amount
-        product_model.price_currency = product.price.currency
-        product_model.category_id = product.category_id
-        product_model.sku = product.sku
-        product_model.status = product.status.value
-        product_model.images = product.images
-        product_model.tags = product.tags
-        product_model.attributes = product.attributes
-        product_model.updated_at = product.updated_at
+                # Add variant images if they exist
+                if variant_data.get("images"):
+                    for v_image_data in variant_data["images"]:
+                        v_image = ProductImageModel(
+                            product_id=product_model.id,
+                            url=v_image_data["url"],
+                            alt=v_image_data.get("alt"),
+                            is_main=v_image_data.get("isMain", False),
+                            order=v_image_data.get("order", 0),
+                        )
+                        self._session.add(v_image)
 
-        # Commit changes
-        await self._session.commit()
-        await self._session.refresh(product_model)
+        # Add config options
+        if product_dto.configOptions:
+            for config_data in product_dto.configOptions:
+                config = ConfigOptionModel(
+                    product_id=product_model.id,
+                    name=config_data["name"],
+                    values=config_data["values"],
+                )
+                self._session.add(config)
 
-        # Convert back to domain model and return
-        return self._to_domain(product_model)
+        await self._session.flush()
 
-    async def delete(self, product_id: UUID) -> bool:
-        """Delete a product from the database."""
-        # Find product
-        query = select(ProductModel).where(ProductModel.id == product_id)
-        result = await self._session.execute(query)
-        product_model = result.scalar_one_or_none()
+        # Convert to domain entity
+        return await self._to_domain_entity(product_model)
 
-        if not product_model:
-            return False
+    async def get_by_id(self, product_id: uuid.UUID) -> Optional[Product]:
+        """Get a product by its ID.
 
-        # Delete product
-        await self._session.delete(product_model)
-        await self._session.commit()
+        Args:
+            product_id: Product ID
 
-        return True
+        Returns:
+            Product entity or None if not found
+        """
+        stmt = (
+            select(ProductModel)
+            .options(
+                selectinload(ProductModel.categories),
+                selectinload(ProductModel.images),
+                selectinload(ProductModel.variants),
+                selectinload(ProductModel.config_options),
+                selectinload(ProductModel.reviews),
+                joinedload(ProductModel.brand),
+            )
+            .where(ProductModel.id == product_id)
+        )
 
-    async def get_by_id(self, product_id: UUID) -> Optional[Product]:
-        """Get a product by ID from the database."""
-        query = select(ProductModel).where(ProductModel.id == product_id)
-        result = await self._session.execute(query)
-        product_model = result.scalar_one_or_none()
+        result = await self._session.execute(stmt)
+        product_model = result.scalars().first()
 
         if not product_model:
             return None
 
-        return self._to_domain(product_model)
+        return await self._to_domain_entity(product_model)
 
-    async def list_products(self, limit: int = 100, offset: int = 0) -> List[Product]:
-        """List products with pagination from the database."""
-        query = (
+    async def get_by_sku(self, sku: str) -> Optional[Product]:
+        """Get a product by its SKU.
+
+        Args:
+            sku: Product SKU
+
+        Returns:
+            Product entity or None if not found
+        """
+        stmt = (
             select(ProductModel)
-            .order_by(ProductModel.created_at.desc())
-            .limit(limit)
-            .offset(offset)
+            .options(
+                selectinload(ProductModel.categories),
+                selectinload(ProductModel.images),
+                selectinload(ProductModel.variants),
+                selectinload(ProductModel.config_options),
+                selectinload(ProductModel.reviews),
+                joinedload(ProductModel.brand),
+            )
+            .where(ProductModel.sku == sku)
         )
-        result = await self._session.execute(query)
-        product_models = result.scalars().all()
 
-        return [self._to_domain(pm) for pm in product_models]
+        result = await self._session.execute(stmt)
+        product_model = result.scalars().first()
 
-    async def search_products(
-        self,
-        query: str,
-        category_id: Optional[UUID] = None,
-        limit: int = 100,
-        offset: int = 0,
-    ) -> List[Product]:
-        """Search products by name, description or category."""
-        # Build search query
-        search_query = select(ProductModel)
+        if not product_model:
+            return None
 
-        # Add text search condition
-        if query:
-            search_term = f"%{query}%"
-            search_query = search_query.where(
-                ProductModel.name.ilike(search_term)
-                | ProductModel.description.ilike(search_term),
+        return await self._to_domain_entity(product_model)
+
+    async def update(
+        self, product_id: uuid.UUID, product_dto: ProductUpdateDTO,
+    ) -> Optional[Product]:
+        """Update a product.
+
+        Args:
+            product_id: Product ID
+            product_dto: DTO with updated product data
+
+        Returns:
+            Updated product entity or None if not found
+        """
+        stmt = (
+            select(ProductModel)
+            .options(
+                selectinload(ProductModel.categories),
+                selectinload(ProductModel.images),
+                selectinload(ProductModel.variants),
+                selectinload(ProductModel.config_options),
+            )
+            .where(ProductModel.id == product_id)
+        )
+
+        result = await self._session.execute(stmt)
+        product_model = result.scalars().first()
+
+        if not product_model:
+            return None
+
+        # Update product fields
+        if product_dto.name is not None:
+            product_model.name = product_dto.name
+        if product_dto.slug is not None:
+            product_model.slug = product_dto.slug
+        if product_dto.description is not None:
+            product_model.description = product_dto.description
+        if product_dto.summary is not None:
+            product_model.summary = product_dto.summary
+        if product_dto.price is not None:
+            product_model.price_amount = product_dto.price
+        if product_dto.compareAtPrice is not None:
+            product_model.compare_at_price = product_dto.compareAtPrice
+        if product_dto.currency is not None:
+            product_model.price_currency = product_dto.currency
+        if product_dto.brand_id is not None:
+            product_model.brand_id = product_dto.brand_id
+        if product_dto.model is not None:
+            product_model.model = product_dto.model
+        if product_dto.sku is not None:
+            product_model.sku = product_dto.sku
+        if product_dto.stock is not None:
+            product_model.stock = product_dto.stock
+        if product_dto.isAvailable is not None:
+            product_model.is_available = product_dto.isAvailable
+        if product_dto.isNew is not None:
+            product_model.is_new = product_dto.isNew
+        if product_dto.isRefurbished is not None:
+            product_model.is_refurbished = product_dto.isRefurbished
+        if product_dto.condition is not None:
+            product_model.condition = product_dto.condition
+        if product_dto.hasVariants is not None:
+            product_model.has_variants = product_dto.hasVariants
+        if product_dto.tags is not None:
+            product_model.tags = product_dto.tags
+        if product_dto.attributes is not None:
+            product_model.attributes = product_dto.attributes
+        if product_dto.highlightedFeatures is not None:
+            product_model.highlighted_features = product_dto.highlightedFeatures
+        if product_dto.shipping is not None:
+            product_model.shipping = product_dto.shipping
+        if product_dto.warranty is not None:
+            product_model.warranty = product_dto.warranty
+
+        # Update categories if provided
+        if product_dto.category_ids is not None:
+            # Clear existing categories
+            product_model.categories = []
+
+            if product_dto.category_ids:
+                stmt = select(CategoryModel).where(
+                    CategoryModel.id.in_(product_dto.category_ids),
+                )
+                categories = (await self._session.execute(stmt)).scalars().all()
+                product_model.categories = categories
+
+        # Update images if provided
+        if product_dto.images is not None:
+            # Delete existing images
+            delete_stmt = select(ProductImageModel).where(
+                ProductImageModel.product_id == product_id,
+            )
+            existing_images = (await self._session.execute(delete_stmt)).scalars().all()
+            for image in existing_images:
+                await self._session.delete(image)
+
+            # Add new images
+            for image_data in product_dto.images:
+                image = ProductImageModel(
+                    product_id=product_model.id,
+                    url=image_data["url"],
+                    alt=image_data.get("alt"),
+                    is_main=image_data.get("isMain", False),
+                    order=image_data.get("order", 0),
+                )
+                self._session.add(image)
+
+        # Update variants if provided
+        if product_dto.variants is not None:
+            # Delete existing variants
+            delete_stmt = select(ProductVariantModel).where(
+                ProductVariantModel.parent_product_id == product_id,
+            )
+            existing_variants = (
+                (await self._session.execute(delete_stmt)).scalars().all()
+            )
+            for variant in existing_variants:
+                await self._session.delete(variant)
+
+            # Add new variants
+            for variant_data in product_dto.variants:
+                variant = ProductVariantModel(
+                    parent_product_id=product_model.id,
+                    name=variant_data["name"],
+                    sku=variant_data["sku"],
+                    price_amount=variant_data["price"],
+                    price_currency=product_model.price_currency,
+                    compare_at_price=variant_data.get("compareAtPrice"),
+                    stock=variant_data.get("stock", 0),
+                    is_available=variant_data.get("isAvailable", True),
+                    is_selected=variant_data.get("isSelected", False),
+                    attributes=variant_data.get("attributes", {}),
+                )
+                self._session.add(variant)
+
+        # Update config options if provided
+        if product_dto.configOptions is not None:
+            # Delete existing config options
+            delete_stmt = select(ConfigOptionModel).where(
+                ConfigOptionModel.product_id == product_id,
+            )
+            existing_configs = (
+                (await self._session.execute(delete_stmt)).scalars().all()
+            )
+            for config in existing_configs:
+                await self._session.delete(config)
+
+            # Add new config options
+            for config_data in product_dto.configOptions:
+                config = ConfigOptionModel(
+                    product_id=product_model.id,
+                    name=config_data["name"],
+                    values=config_data["values"],
+                )
+                self._session.add(config)
+
+        # Update timestamp
+        product_model.updated_at = datetime.utcnow()
+
+        await self._session.flush()
+
+        # Convert to domain entity
+        return await self._to_domain_entity(product_model)
+
+    async def delete(self, product_id: uuid.UUID) -> bool:
+        """Delete a product.
+
+        Args:
+            product_id: Product ID
+
+        Returns:
+            True if deleted, False if not found
+        """
+        stmt = select(ProductModel).where(ProductModel.id == product_id)
+        result = await self._session.execute(stmt)
+        product_model = result.scalars().first()
+
+        if not product_model:
+            return False
+
+        await self._session.delete(product_model)
+        await self._session.flush()
+
+        return True
+
+    async def list(
+        self, filters: Optional[ProductFilterDTO] = None,
+    ) -> Tuple[List[Product], int]:
+        """List products with optional filtering.
+
+        Args:
+            filters: Optional filtering parameters
+
+        Returns:
+            List of product entities and total count
+        """
+        filters = filters or ProductFilterDTO()
+
+        # Base query for data
+        query = select(ProductModel).options(
+            selectinload(ProductModel.categories),
+            selectinload(ProductModel.images),
+            joinedload(ProductModel.brand),
+        )
+
+        # Base query for count
+        count_query = select(func.count()).select_from(ProductModel)
+
+        # Apply filters
+        conditions = []
+
+        if filters.category_id:
+            conditions.append(
+                ProductModel.id.in_(
+                    select(product_categories.c.product_id)
+                    .where(product_categories.c.category_id == filters.category_id)
+                    .scalar_subquery(),
+                ),
             )
 
-        # Add category filter if provided
-        if category_id:
-            search_query = search_query.where(ProductModel.category_id == category_id)
+        if filters.brand_id:
+            conditions.append(ProductModel.brand_id == filters.brand_id)
 
-        # Add pagination
-        search_query = (
-            search_query.order_by(
-                ProductModel.created_at.desc(),
+        if filters.price_min is not None:
+            conditions.append(ProductModel.price_amount >= filters.price_min)
+
+        if filters.price_max is not None:
+            conditions.append(ProductModel.price_amount <= filters.price_max)
+
+        if filters.search:
+            search_term = f"%{filters.search}%"
+            conditions.append(
+                or_(
+                    ProductModel.name.ilike(search_term),
+                    ProductModel.description.ilike(search_term),
+                    ProductModel.sku.ilike(search_term),
+                ),
             )
-            .limit(limit)
-            .offset(offset)
-        )
 
-        # Execute query
-        result = await self._session.execute(search_query)
-        product_models = result.scalars().all()
+        if filters.tags:
+            for tag in filters.tags:
+                # For PostgreSQL's JSON array containment
+                conditions.append(ProductModel.tags.contains([tag]))
 
-        return [self._to_domain(pm) for pm in product_models]
+        if filters.is_available is not None:
+            conditions.append(ProductModel.is_available == filters.is_available)
 
-    async def get_by_category(
-        self,
-        category_id: UUID,
-        limit: int = 100,
-        offset: int = 0,
-    ) -> List[Product]:
-        """Get products by category ID."""
-        query = (
-            select(ProductModel)
-            .where(ProductModel.category_id == category_id)
-            .order_by(ProductModel.created_at.desc())
-            .limit(limit)
-            .offset(offset)
-        )
+        if filters.is_new is not None:
+            conditions.append(ProductModel.is_new == filters.is_new)
+
+        if filters.condition:
+            conditions.append(ProductModel.condition == filters.condition)
+
+        # Add conditions to queries
+        if conditions:
+            query = query.where(and_(*conditions))
+            count_query = count_query.where(and_(*conditions))
+
+        # Apply sorting
+        if filters.sort_by:
+            column = getattr(ProductModel, filters.sort_by, ProductModel.created_at)
+            if filters.sort_order and filters.sort_order.lower() == "desc":
+                query = query.order_by(column.desc())
+            else:
+                query = query.order_by(column.asc())
+        else:
+            # Default sorting by created_at
+            query = query.order_by(ProductModel.created_at.desc())
+
+        # Apply pagination
+        query = query.offset(filters.offset).limit(filters.limit)
+
+        # Execute queries
         result = await self._session.execute(query)
+        count_result = await self._session.execute(count_query)
+
         product_models = result.scalars().all()
+        total = count_result.scalar() or 0
 
-        return [self._to_domain(pm) for pm in product_models]
+        # Convert to domain entities
+        products = [await self._to_domain_entity(model) for model in product_models]
 
-    def _to_domain(self, product_model: ProductModel) -> Product:
-        """Convert ORM model to domain model."""
-        # Cast to avoid type errors with SQLAlchemy descriptors
-        id_val = cast(UUID, product_model.id)
-        name_val = cast(str, product_model.name)
-        description_val = cast(str, product_model.description)
-        price_amount_val = float(product_model.price_amount)  # Convert Numeric to float
-        price_currency_val = cast(str, product_model.price_currency)
-        category_id_val = cast(Optional[UUID], product_model.category_id)
-        sku_val = cast(str, product_model.sku)
-        status_val = cast(str, product_model.status)
-        images_val = cast(List[str], product_model.images)
-        tags_val = cast(List[str], product_model.tags)
-        attributes_val = cast(Dict[str, Any], product_model.attributes)
-        created_at_val = cast(datetime, product_model.created_at)
-        updated_at_val = cast(datetime, product_model.updated_at)
+        return products, total
 
-        return Product(
-            id=id_val,
-            name=name_val,
-            description=description_val,
-            price=Money(
-                amount=price_amount_val,
-                currency=price_currency_val,
+    async def _to_domain_entity(self, model: ProductModel) -> Product:
+        """Convert a ProductModel to a Product domain entity.
+
+        Args:
+            model: ProductModel instance
+
+        Returns:
+            Product domain entity
+        """
+        # Prepare categories
+        categories = []
+        if model.categories:
+            for category in model.categories:
+                categories.append(
+                    {
+                        "id": category.id,
+                        "name": category.name,
+                        "slug": category.slug,
+                        "parentId": category.parent_id,
+                    },
+                )
+
+        # Prepare images
+        images = []
+        if model.images:
+            for image in model.images:
+                images.append(
+                    {
+                        "id": str(image.id),
+                        "url": image.url,
+                        "alt": image.alt,
+                        "isMain": image.is_main,
+                        "order": image.order,
+                    },
+                )
+
+        # Prepare variants
+        variants = []
+        if model.variants:
+            for variant in model.variants:
+                variant_data = {
+                    "id": variant.id,
+                    "sku": variant.sku,
+                    "name": variant.name,
+                    "price": float(variant.price_amount),
+                    "compareAtPrice": (
+                        float(variant.compare_at_price)
+                        if variant.compare_at_price
+                        else None
+                    ),
+                    "attributes": variant.attributes,
+                    "stock": variant.stock,
+                    "isAvailable": variant.is_available,
+                    "isSelected": variant.is_selected,
+                }
+                variants.append(variant_data)
+
+        # Prepare config options
+        config_options = []
+        if model.config_options:
+            for option in model.config_options:
+                config_options.append(
+                    {
+                        "id": str(option.id),
+                        "name": option.name,
+                        "values": option.values,
+                    },
+                )
+
+        # Prepare reviews
+        reviews = []
+        if model.reviews:
+            for review in model.reviews:
+                review_data = {
+                    "id": str(review.id),
+                    "userId": review.user_id,
+                    "userName": review.user_name,
+                    "rating": review.rating,
+                    "title": review.title,
+                    "comment": review.comment,
+                    "date": review.created_at.isoformat(),
+                    "isVerifiedPurchase": review.is_verified_purchase,
+                    "likes": review.likes,
+                    "attributes": review.attributes,
+                }
+                reviews.append(review_data)
+
+        # Create brand data if available
+        brand = None
+        if model.brand:
+            brand = {
+                "id": model.brand.id,
+                "name": model.brand.name,
+                "logo": model.brand.logo,
+            }
+
+        # Build product data dictionary
+        product_data = {
+            "id": model.id,
+            "name": model.name,
+            "slug": model.slug,
+            "description": model.description,
+            "summary": model.summary,
+            "price": float(model.price_amount),
+            "compareAtPrice": (
+                float(model.compare_at_price) if model.compare_at_price else None
             ),
-            category_id=category_id_val,
-            sku=sku_val,
-            status=ProductStatus(status_val),
-            images=images_val,
-            tags=tags_val,
-            attributes=attributes_val,
-            created_at=created_at_val,
-            updated_at=updated_at_val,
-        )
+            "currency": model.price_currency,
+            "brand": brand,
+            "model": model.model,
+            "sku": model.sku,
+            "stock": model.stock,
+            "isAvailable": model.is_available,
+            "isNew": model.is_new,
+            "isRefurbished": model.is_refurbished,
+            "condition": model.condition,
+            "categories": categories,
+            "tags": model.tags,
+            "images": images,
+            "attributes": model.attributes,
+            "hasVariants": model.has_variants,
+            "variants": variants,
+            "configOptions": config_options,
+            "shipping": model.shipping,
+            "warranty": model.warranty,
+            "reviews": reviews,
+            "highlightedFeatures": model.highlighted_features,
+            "created_at": model.created_at,
+            "updated_at": model.updated_at,
+        }
+
+        return Product(**product_data)

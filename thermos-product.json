@@ -1,0 +1,394 @@
+{
+  "id": "123e4567-e89b-12d3-a456-426614174002",
+  "sku": "STANLEY-TERMO-1.4L",
+  "name": "Termo Stanley Clásico 1.4lts Negro",
+  "slug": "termo-stanley-clasico-1-4lts-negro",
+  "description": "<p>El Termo Stanley Clásico es el compañero perfecto para tus aventuras al aire libre o para tu día a día, manteniendo tus bebidas calientes o frías por horas.</p><h3>Características principales:</h3><ul><li>Capacidad: 1.4 litros</li><li>Mantiene el agua caliente garantizada hasta por 40 horas</li><li>Exterior e interior de acero inoxidable de alta calidad</li><li>Incluye manija para fácil transporte</li><li>Sistema antigoteo que evita pérdidas</li><li>No contiene BPA</li><li>Tapa que sirve como vaso</li></ul>",
+  "summary": "Termo Stanley Clásico de 1.4 litros con sistema antigoteo y conservación de temperatura por hasta 40 horas. Fabricado en acero inoxidable de alta calidad.",
+  "brand": {
+    "id": "123e4567-e89b-12d3-a456-426614174102",
+    "name": "Stanley",
+    "logo": "/brands/stanley-logo.png"
+  },
+  "model": "Clásico 1.4L",
+  "price": 1087.74,
+  "compareAtPrice": 1144.99,
+  "currency": "ARS",
+  "stock": 4,
+  "isAvailable": true,
+  "isNew": false,
+  "isRefurbished": false,
+  "condition": "new",
+  "categories": [
+    {
+      "id": "cat1",
+      "name": "Camping, Caza y Pesca",
+      "slug": "camping-caza-y-pesca"
+    },
+    {
+      "id": "cat2",
+      "name": "Accesorios de Camping",
+      "slug": "accesorios-de-camping",
+      "parentId": "cat1"
+    },
+    {
+      "id": "cat3",
+      "name": "Recipientes Térmicos",
+      "slug": "recipientes-termicos",
+      "parentId": "cat2"
+    },
+    {
+      "id": "cat4",
+      "name": "Termos",
+      "slug": "termos",
+      "parentId": "cat3"
+    }
+  ],
+  "tags": ["termo", "stanley", "camping", "outdoor", "acero inoxidable", "térmico"],
+  "images": [
+    {
+      "id": "img-black-1",
+      "url": "/images/stanley-black.png",
+      "alt": "Termo Stanley Clásico 1.4lts Negro - Vista principal",
+      "isMain": true,
+      "order": 1
+    },
+    {
+      "id": "img-black-2",
+      "url": "/images/stanley-black-specs.png",
+      "alt": "Termo Stanley Clásico 1.4lts Negro - Especificaciones",
+      "isMain": false,
+      "order": 2
+    },
+    {
+      "id": "img-black-3",
+      "url": "/images/stanley-black-open.png",
+      "alt": "Termo Stanley Clásico 1.4lts Negro - Con tapa abierta",
+      "isMain": false,
+      "order": 3
+    }
+  ],
+  "attributes": [
+    {
+      "id": "attr1",
+      "name": "Capacidad",
+      "value": "1.4 L",
+      "displayValue": "1.4 Litros",
+      "isHighlighted": true,
+      "groupName": "Características"
+    },
+    {
+      "id": "attr2",
+      "name": "Material",
+      "value": "Acero inoxidable",
+      "displayValue": "Acero inoxidable",
+      "isHighlighted": true,
+      "groupName": "Características"
+    },
+    {
+      "id": "attr3",
+      "name": "Conservación de temperatura",
+      "value": "40 horas",
+      "displayValue": "40 horas",
+      "isHighlighted": true,
+      "groupName": "Rendimiento"
+    },
+    {
+      "id": "attr4",
+      "name": "Incluye",
+      "value": "Manija",
+      "displayValue": "Manija",
+      "isHighlighted": false,
+      "groupName": "Contenido"
+    },
+    {
+      "id": "attr5",
+      "name": "Sistema",
+      "value": "Antigoteo",
+      "displayValue": "Antigoteo",
+      "isHighlighted": true,
+      "groupName": "Características"
+    }
+  ],
+  "hasVariants": true,
+  "variants": [
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174203",
+      "sku": "STANLEY-TERMO-1.4L-NEGRO",
+      "name": "Negro",
+      "price": 1087.74,
+      "compareAtPrice": 1144.99,
+      "attributes": {
+        "Color": "Negro"
+      },
+      "stock": 4,
+      "isAvailable": true,
+      "isSelected": true,
+      "image": "/images/stanley-black.png",
+      "images": [
+        {
+          "id": "img-black-1",
+          "url": "/images/stanley-black.png",
+          "alt": "Termo Stanley Clásico 1.4lts Negro - Vista principal",
+          "isMain": true,
+          "order": 1
+        },
+        {
+          "id": "img-black-2",
+          "url": "/images/stanley-black-specs.png",
+          "alt": "Termo Stanley Clásico 1.4lts Negro - Especificaciones",
+          "isMain": false,
+          "order": 2
+        },
+        {
+          "id": "img-black-3",
+          "url": "/images/stanley-black-open.png",
+          "alt": "Termo Stanley Clásico 1.4lts Negro - Con tapa abierta",
+          "isMain": false,
+          "order": 3
+        }
+      ]
+    },
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174204",
+      "sku": "STANLEY-TERMO-1.4L-VERDE",
+      "name": "Verde",
+      "price": 1129.99,
+      "compareAtPrice": 1199.99,
+      "attributes": {
+        "Color": "Verde"
+      },
+      "stock": 10,
+      "isAvailable": true,
+      "image": "/images/stanley-green.png",
+      "images": [
+        {
+          "id": "img-green-1",
+          "url": "/images/stanley-green.png",
+          "alt": "Termo Stanley Clásico 1.4lts Verde - Vista principal",
+          "isMain": true,
+          "order": 1
+        },
+        {
+          "id": "img-green-2",
+          "url": "/images/stanley-green-specs.png",
+          "alt": "Termo Stanley Clásico 1.4lts Verde - Especificaciones",
+          "isMain": false,
+          "order": 2
+        },
+        {
+          "id": "img-green-3",
+          "url": "/images/stanley-green-close.png",
+          "alt": "Termo Stanley Clásico 1.4lts Verde - Vista detalle",
+          "isMain": false,
+          "order": 3
+        }
+      ]
+    },
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174205",
+      "sku": "STANLEY-TERMO-1.4L-ROSA",
+      "name": "Rosa",
+      "price": 1159.99,
+      "compareAtPrice": 1249.99,
+      "attributes": {
+        "Color": "Rosa"
+      },
+      "stock": 7,
+      "isAvailable": true,
+      "image": "/images/stanley-pink.png",
+      "images": [
+        {
+          "id": "img-pink-1",
+          "url": "/images/stanley-pink.png",
+          "alt": "Termo Stanley Clásico 1.4lts Rosa - Vista principal",
+          "isMain": true,
+          "order": 1
+        },
+        {
+          "id": "img-pink-2",
+          "url": "/images/stanley-pink-specs.png",
+          "alt": "Termo Stanley Clásico 1.4lts Rosa - Especificaciones",
+          "isMain": false,
+          "order": 2
+        },
+        {
+          "id": "img-pink-3",
+          "url": "/images/stanley-pink-open.png",
+          "alt": "Termo Stanley Clásico 1.4lts Rosa - Vista detalle",
+          "isMain": false,
+          "order": 3
+        }
+      ]
+    }
+  ],
+  "configOptions": [
+    {
+      "id": "color",
+      "name": "Color",
+      "values": [
+        {
+          "id": "verde",
+          "value": "Verde",
+          "isAvailable": true,
+          "image": "/images/stanley-green.png"
+        },
+        {
+          "id": "negro",
+          "value": "Negro",
+          "isAvailable": true,
+          "isSelected": true,
+          "image": "/images/stanley-black.png"
+        },
+        {
+          "id": "rosa",
+          "value": "Rosa",
+          "isAvailable": true,
+          "image": "/images/stanley-pink.png"
+        }
+      ]
+    }
+  ],
+  "shipping": {
+    "isFree": true,
+    "estimatedDeliveryTime": {
+      "min": 2,
+      "max": 3,
+      "unit": "day"
+    },
+    "availableShippingMethods": [
+      {
+        "id": "shipping1",
+        "name": "Envío estándar",
+        "cost": 0,
+        "estimatedDeliveryTime": {
+          "min": 2,
+          "max": 3,
+          "unit": "day"
+        }
+      },
+      {
+        "id": "shipping2",
+        "name": "Envío express",
+        "cost": 1500,
+        "estimatedDeliveryTime": {
+          "min": 24,
+          "max": 48,
+          "unit": "hour"
+        }
+      }
+    ]
+  },
+  "seller": {
+    "id": "seller1",
+    "name": "TECNOSHARK",
+    "isOfficial": false,
+    "reputation": {
+      "level": "platinum",
+      "score": 4.9,
+      "totalSales": 1243,
+      "completedSales": 1230,
+      "canceledSales": 13,
+      "totalReviews": 987
+    },
+    "location": "Capital Federal"
+  },
+  "rating": {
+    "average": 4.8,
+    "count": 3512,
+    "distribution": {
+      "1": 35,
+      "2": 70,
+      "3": 140,
+      "4": 702,
+      "5": 2565
+    }
+  },
+  "reviews": [
+    {
+      "id": "review1",
+      "userId": "user1",
+      "userName": "María L.",
+      "rating": 5,
+      "title": "Excelente calidad",
+      "comment": "Excelente termo, mantiene el agua caliente por más de 24 horas. La calidad es impresionante y el diseño muy práctico. Lo recomiendo totalmente.",
+      "date": "2024-03-15T00:00:00.000Z",
+      "isVerifiedPurchase": true,
+      "likes": 42,
+      "attributes": [
+        {
+          "name": "Calidad",
+          "rating": 5
+        },
+        {
+          "name": "Relación precio-calidad",
+          "rating": 4
+        }
+      ]
+    },
+    {
+      "id": "review2",
+      "userId": "user2",
+      "userName": "Carlos R.",
+      "rating": 5,
+      "comment": "Increíble termo, cumple perfectamente con lo que promete. Mantiene el agua caliente por muchísimas horas y es muy resistente.",
+      "date": "2024-02-28T00:00:00.000Z",
+      "isVerifiedPurchase": true,
+      "likes": 35
+    }
+  ],
+  "paymentOptions": [
+    {
+      "id": "payment1",
+      "type": "credit_card",
+      "name": "Tarjeta de crédito",
+      "installments": [
+        {
+          "quantity": 1,
+          "amount": 108774.05,
+          "interestRate": 0,
+          "totalAmount": 108774.05
+        },
+        {
+          "quantity": 12,
+          "amount": 9064.5,
+          "interestRate": 0,
+          "totalAmount": 108774.05
+        }
+      ]
+    }
+  ],
+  "warranty": {
+    "hasWarranty": true,
+    "length": 12,
+    "unit": "month",
+    "type": "manufacturer",
+    "description": "Garantía de fábrica: 12 meses"
+  },
+  "promotions": [
+    {
+      "id": "promo1",
+      "type": "discount",
+      "description": "5% OFF",
+      "discountPercentage": 5,
+      "validFrom": "2024-01-01T00:00:00.000Z",
+      "validTo": "2024-12-31T00:00:00.000Z"
+    },
+    {
+      "id": "promo2",
+      "type": "shipping",
+      "description": "Envío gratis a todo el país",
+      "validFrom": "2024-01-01T00:00:00.000Z",
+      "validTo": "2024-12-31T00:00:00.000Z"
+    }
+  ],
+  "highlightedFeatures": [
+    "Capacidad del termo: 1.4 L",
+    "Agua caliente garantizada hasta por 40 horas",
+    "Exterior de acero inoxidable e interior de acero inoxidable",
+    "Incluye manija",
+    "Con sistema antigoteo que evita pérdidas",
+    "No contiene BPA"
+  ],
+  "productType": "simple"
+}

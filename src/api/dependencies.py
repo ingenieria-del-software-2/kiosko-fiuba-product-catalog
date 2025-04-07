@@ -22,7 +22,7 @@ from src.products.domain.event_publisher.event_publisher import EventPublisher
 from src.products.domain.repositories.category_repository import CategoryRepository
 from src.products.domain.repositories.product_repository import ProductRepository
 from src.products.infrastructure.repositories.postgresql.product_repository import (
-    PostgresProductRepository,
+    PostgreSQLProductRepository,
 )
 from src.shared.database.dependencies import get_db_session
 from src.shared.event_publisher.console_publisher import ConsoleEventPublisher
@@ -64,7 +64,7 @@ async def get_product_repository(
         # Return a mock for testing
         # Using cast to satisfy the type checker
         return cast(ProductRepository, {})
-    return PostgresProductRepository(session)
+    return PostgreSQLProductRepository(session)
 
 
 async def get_category_repository(

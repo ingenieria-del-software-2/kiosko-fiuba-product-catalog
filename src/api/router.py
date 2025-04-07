@@ -1,14 +1,14 @@
-"""Main API router module."""
+"""API router configuration."""
 
 from fastapi import APIRouter
 
-from src.api.routes import categories, dummy, echo, monitoring, products
+from src.api.routes import brands, categories, health, products
 
+# Create main router
 api_router = APIRouter()
 
-# Include routes
-api_router.include_router(monitoring.router, tags=["monitoring"])
-api_router.include_router(echo.router, prefix="/echo", tags=["echo"])
-api_router.include_router(dummy.router, prefix="/dummy", tags=["dummy"])
-api_router.include_router(products.router, tags=["products"])
-api_router.include_router(categories.router, prefix="/products", tags=["products"])
+# Include sub-routers
+api_router.include_router(health.router)
+api_router.include_router(products.router)
+api_router.include_router(categories.router)
+api_router.include_router(brands.router)
