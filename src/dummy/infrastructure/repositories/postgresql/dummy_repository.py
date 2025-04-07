@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dummy.domain.model.dummy import Dummy
-from src.dummy.infrastructure.repositories.interfaces.dummy_repository import (
+from src.dummy.domain.repositories.interfaces.dummy_repository import (
     DummyRepository,
 )
 from src.dummy.infrastructure.repositories.postgresql.model.dummy_model import (

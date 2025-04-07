@@ -3,13 +3,13 @@
 from typing import List, Optional
 
 from src.dummy.application.dtos.dummy_dtos import CreateDummyDTO, DummyDTO
+from src.dummy.domain.event_publisher.interfaces.event_publisher import (
+    EventPublisher,
+)
 from src.dummy.domain.events.events import DummyCreatedEvent
 from src.dummy.domain.exceptions.domain_exceptions import DummyNotFoundError
 from src.dummy.domain.model.dummy import Dummy
-from src.dummy.infrastructure.event_publisher.interfaces.event_publisher import (
-    EventPublisher,
-)
-from src.dummy.infrastructure.repositories.interfaces.dummy_repository import (
+from src.dummy.domain.repositories.interfaces.dummy_repository import (
     DummyRepository,
 )
 

@@ -4,14 +4,14 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.dummy.application.services.dummy_service import DummyService
-from src.dummy.infrastructure.event_publisher.console.console_publisher import (
-    ConsoleEventPublisher,
-)
-from src.dummy.infrastructure.event_publisher.interfaces.event_publisher import (
+from src.dummy.domain.event_publisher.interfaces.event_publisher import (
     EventPublisher,
 )
-from src.dummy.infrastructure.repositories.interfaces.dummy_repository import (
+from src.dummy.domain.repositories.interfaces.dummy_repository import (
     DummyRepository,
+)
+from src.dummy.infrastructure.event_publisher.console.console_publisher import (
+    ConsoleEventPublisher,
 )
 from src.dummy.infrastructure.repositories.postgresql.dummy_repository import (
     PostgreSQLDummyRepository,

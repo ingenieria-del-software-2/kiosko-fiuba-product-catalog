@@ -32,7 +32,7 @@ async def _engine() -> AsyncGenerator[AsyncEngine, None]:
     :yield: new engine.
     """
     from src.shared.database.base import Base
-    from src.shared.database.models import load_all_models
+    from src.shared.database.model_loader import load_all_models
 
     # Load models first
     load_all_models()
