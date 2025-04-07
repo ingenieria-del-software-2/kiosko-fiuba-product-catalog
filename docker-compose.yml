@@ -10,10 +10,10 @@ services:
     labels:
       # Enables traefik for this container.
       - traefik.enable=true
-      - traefik.http.routers.mercado_libre.rule=Host(`${PRODUCT_CATALOG_TRAEFIK_HOST:-mercado_libre.localhost}`)
-      - traefik.http.routers.mercado_libre.entrypoints=http
-      - traefik.http.routers.mercado_libre.service=mercado_libre
-      - traefik.http.services.mercado_libre.loadbalancer.server.port=${PRODUCT_CATALOG_PORT:-8000}
+      - traefik.http.routers.product_catalog.rule=Host(`${PRODUCT_CATALOG_TRAEFIK_HOST:-product_catalog.localhost}`)
+      - traefik.http.routers.product_catalog.entrypoints=http
+      - traefik.http.routers.product_catalog.service=product_catalog
+      - traefik.http.services.product_catalog.loadbalancer.server.port=${PRODUCT_CATALOG_PORT:-8000}
     ports:
       - "8000:8000"
     networks:
@@ -24,26 +24,26 @@ services:
         condition: service_healthy
     environment:
       PRODUCT_CATALOG_HOST: 0.0.0.0
-      PRODUCT_CATALOG_DB_HOST: mercado-libre-db
+      PRODUCT_CATALOG_DB_HOST: product-catalog-db
       PRODUCT_CATALOG_DB_PORT: 5432
-      PRODUCT_CATALOG_DB_USER: mercado_libre
-      PRODUCT_CATALOG_DB_PASS: mercado_libre
-      PRODUCT_CATALOG_DB_BASE: mercado_libre
+      PRODUCT_CATALOG_DB_USER: product_catalog
+      PRODUCT_CATALOG_DB_PASS: product_catalog
+      PRODUCT_CATALOG_DB_BASE: product_catalog
     volumes:
       - ./src:/app/src
 
   db:
     image: postgres:16.3-bullseye
-    hostname: mercado-libre-db
+    hostname: product-catalog-db
     environment:
-      POSTGRES_PASSWORD: "mercado_libre"
-      POSTGRES_USER: "mercado_libre"
-      POSTGRES_DB: "mercado_libre"
+      POSTGRES_PASSWORD: "product_catalog"
+      POSTGRES_USER: "product_catalog"
+      POSTGRES_DB: "product_catalog"
     volumes:
-      - mercado-libre-db-data:/var/lib/postgresql/data
+      - product-catalog-db-data:/var/lib/postgresql/data
     restart: always
     healthcheck:
-      test: pg_isready -U mercado_libre
+      test: pg_isready -U product_catalog
       interval: 2s
       timeout: 3s
       retries: 40
@@ -53,11 +53,11 @@ services:
     restart: "no"
     command: alembic upgrade head
     environment:
-      PRODUCT_CATALOG_DB_HOST: mercado-libre-db
+      PRODUCT_CATALOG_DB_HOST: product-catalog-db
       PRODUCT_CATALOG_DB_PORT: 5432
-      PRODUCT_CATALOG_DB_USER: mercado_libre
-      PRODUCT_CATALOG_DB_PASS: mercado_libre
-      PRODUCT_CATALOG_DB_BASE: mercado_libre
+      PRODUCT_CATALOG_DB_USER: product_catalog
+      PRODUCT_CATALOG_DB_PASS: product_catalog
+      PRODUCT_CATALOG_DB_BASE: product_catalog
     depends_on:
       db:
         condition: service_healthy
@@ -65,8 +65,8 @@ services:
       - ./src:/app/src
 
 volumes:
-  mercado-libre-db-data:
-    name: mercado-libre-db-data
+  product-catalog-db-data:
+    name: product-catalog-db-data
 
 networks:
   # Network for traefik.

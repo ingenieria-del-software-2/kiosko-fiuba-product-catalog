@@ -41,9 +41,9 @@ class Settings(BaseSettings):
     # Variables for the database
     db_host: str = "localhost"
     db_port: int = 5432
-    db_user: str = "mercado_libre"
-    db_pass: str = "mercado_libre"
-    db_base: str = "mercado_libre"
+    db_user: str = "product_catalog"
+    db_pass: str = "product_catalog"
+    db_base: str = "product_catalog"
     db_echo: bool = False
 
     @property

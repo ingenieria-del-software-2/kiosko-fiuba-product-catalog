@@ -64,7 +64,7 @@ filterwarnings = [
 ]
 env = [
     "PRODUCT_CATALOG_ENVIRONMENT=pytest",
-    "PRODUCT_CATALOG_DB_BASE=mercado_libre_test",
+    "PRODUCT_CATALOG_DB_BASE=product_catalog_test",
 ]
 
 [tool.ruff]
