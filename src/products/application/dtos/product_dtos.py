@@ -26,8 +26,7 @@ class CategoryDTO(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
         alias_generator=lambda field_name: (
-            "parentId" if field_name == "parent_id" 
-            else field_name
+            "parentId" if field_name == "parent_id" else field_name
         ),
     )
 
@@ -44,8 +43,7 @@ class ImageDTO(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
         alias_generator=lambda field_name: (
-            "isMain" if field_name == "is_main" 
-            else field_name
+            "isMain" if field_name == "is_main" else field_name
         ),
     )
 
@@ -164,8 +162,7 @@ class SellerDTO(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
         alias_generator=lambda field_name: (
-            "isOfficial" if field_name == "is_official" 
-            else field_name
+            "isOfficial" if field_name == "is_official" else field_name
         ),
     )
 
@@ -258,8 +255,7 @@ class WarrantyDTO(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
         alias_generator=lambda field_name: (
-            "hasWarranty" if field_name == "has_warranty" 
-            else field_name
+            "hasWarranty" if field_name == "has_warranty" else field_name
         ),
     )
 
@@ -468,8 +464,8 @@ class ProductUpdateDTO(BaseModel):
             "is_refurbished": "isRefurbished",
             "has_variants": "hasVariants",
             "config_options": "configOptions",
-            "highlighted_features": "highlightedFeatures"
-        }.get(field_name, field_name)
+            "highlighted_features": "highlightedFeatures",
+        }.get(field_name, field_name),
     )
 
 
