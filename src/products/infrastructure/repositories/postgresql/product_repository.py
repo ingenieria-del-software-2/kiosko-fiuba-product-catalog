@@ -800,11 +800,14 @@ class PostgreSQLProductRepository(ProductRepository):
         Returns:
             Tuple of (list_query, count_query)
         """
-        # Base query for data
+        # Base query for data with eager loading of related entities
         query = select(ProductModel).options(
             selectinload(ProductModel.categories),
             selectinload(ProductModel.images),
-            joinedload(ProductModel.brand),
+            selectinload(ProductModel.variants).selectinload(
+                ProductVariantModel.images,
+            ),
+            joinedload(ProductModel.brand),  # Ensure brand is loaded
         )
 
         # Base query for count
@@ -961,6 +964,7 @@ class PostgreSQLProductRepository(ProductRepository):
             Domain entity
         """
         logger = logging.getLogger(__name__)
+        logger.debug(f"Converting model to domain entity: {model.id}")
 
         # Prepare all data without triggering lazy loading
         product_data = {
@@ -994,8 +998,47 @@ class PostgreSQLProductRepository(ProductRepository):
             "images": [],
             "variants": [],
             "config_options": [],
-            "brand": None,
         }
+
+        # Process brand information if available
+        if hasattr(model, "brand") and model.brand is not None:
+            try:
+                product_data["brand"] = {
+                    "id": model.brand.id,
+                    "name": model.brand.name,
+                    "logo": model.brand.logo,
+                }
+                logger.debug(f"Processed brand: {model.brand.name}")
+            except Exception as e:
+                logger.error(f"Error processing brand: {e!s}")
+                product_data["brand"] = None
+
+        # Process categories if available
+        if hasattr(model, "categories") and model.categories:
+            try:
+                product_data["categories"] = self._prepare_categories(model.categories)
+                logger.debug(f"Processed {len(model.categories)} categories")
+            except Exception as e:
+                logger.error(f"Error processing categories: {e!s}")
+
+        # Process images if available
+        if hasattr(model, "images") and model.images:
+            try:
+                # Get only product-level images (not variant images)
+                product_images = [img for img in model.images if img.variant_id is None]
+                if product_images:
+                    product_data["images"] = self._prepare_images(product_images)
+                    logger.debug(f"Processed {len(product_images)} images")
+            except Exception as e:
+                logger.error(f"Error processing images: {e!s}")
+
+        # Process variants if available
+        if hasattr(model, "variants") and model.variants:
+            try:
+                product_data["variants"] = self._prepare_variants(model.variants)
+                logger.debug(f"Processed {len(model.variants)} variants")
+            except Exception as e:
+                logger.error(f"Error processing variants: {e!s}")
 
         try:
             # Create domain entity from prepared data
@@ -1047,15 +1090,17 @@ class PostgreSQLProductRepository(ProductRepository):
         result = []
         if images:
             for image in images:
-                result.append(
-                    {
-                        "id": str(image.id),
-                        "url": image.url,
-                        "alt": image.alt,
-                        "is_main": image.is_main,
-                        "order": image.order,
-                    },
-                )
+                # Generate a stable ID if none exists
+                image_id = str(image.id) if image.id else f"img_{uuid.uuid4()}"
+
+                image_data = {
+                    "id": image_id,
+                    "url": image.url,
+                    "alt": image.alt,
+                    "isMain": image.is_main,
+                    "order": image.order or 0,
+                }
+                result.append(image_data)
         return result
 
     def _prepare_variants(
