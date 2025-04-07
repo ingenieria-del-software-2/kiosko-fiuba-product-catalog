@@ -31,4 +31,9 @@ class ConsoleEventPublisher(EventPublisher):
             if isinstance(value, datetime):
                 event_data[key] = value.isoformat()
 
-        logger.info("EVENT [%s]: %s", event_type, json.dumps(event_data))
+        # Use WARNING level instead of INFO to make events more visible in logs
+        logger.warning(
+            "*** DOMAIN EVENT *** [%s]: %s",
+            event_type,
+            json.dumps(event_data),
+        )
