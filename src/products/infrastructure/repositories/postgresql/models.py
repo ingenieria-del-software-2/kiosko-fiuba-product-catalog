@@ -186,11 +186,6 @@ class ProductImageModel(Base):
         ForeignKey("products.id", ondelete="CASCADE"),
         nullable=False,
     )
-    variant_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("product_variants.id", ondelete="CASCADE"),
-        nullable=True,
-    )
     url = Column(String(512), nullable=False)
     alt = Column(String(255), nullable=True)
     is_main = Column(Boolean, nullable=False, default=False)
@@ -205,7 +200,6 @@ class ProductImageModel(Base):
 
     # Relationships
     product = relationship("ProductModel", back_populates="images")
-    variant = relationship("ProductVariantModel", back_populates="images")
 
 
 class ProductVariantModel(Base):
@@ -238,7 +232,6 @@ class ProductVariantModel(Base):
 
     # Relationships
     parent_product = relationship("ProductModel", back_populates="variants")
-    images = relationship("ProductImageModel", back_populates="variant")
 
 
 class ConfigOptionModel(Base):
