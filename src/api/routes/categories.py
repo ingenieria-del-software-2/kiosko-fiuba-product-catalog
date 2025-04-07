@@ -17,6 +17,7 @@ class CategoryCreateRequest(BaseModel):
     """Request model for creating a category."""
 
     name: str = Field(..., min_length=1, max_length=255)
+    slug: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
     parent_id: Optional[UUID] = None
 
@@ -34,6 +35,7 @@ class CategoryResponse(BaseModel):
 
     id: UUID
     name: str
+    slug: str
     description: Optional[str] = None
     parent_id: Optional[UUID] = None
 
@@ -47,6 +49,7 @@ async def create_category(
     try:
         domain_category = Category(
             name=category.name,
+            slug=category.slug,
             description=category.description,
             parent_id=category.parent_id,
         )
@@ -108,6 +111,7 @@ async def update_category(
         updated = Category(
             id=category_id,
             name=category.name if category.name is not None else existing.name,
+            slug=category.slug if category.slug is not None else existing.slug,
             description=(
                 category.description
                 if category.description is not None
@@ -153,6 +157,7 @@ def _convert_to_response(category: Category) -> CategoryResponse:
     return CategoryResponse(
         id=category.id,
         name=category.name,
+        slug=category.slug,
         description=category.description,
         parent_id=category.parent_id,
     )

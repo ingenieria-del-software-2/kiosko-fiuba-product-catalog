@@ -37,6 +37,7 @@ class PostgresCategoryRepository(CategoryRepository):
         model = CategoryModel(
             id=category.id or uuid.uuid4(),
             name=category.name,
+            slug=category.slug,
             description=category.description,
             parent_id=category.parent_id,
         )
@@ -46,6 +47,7 @@ class PostgresCategoryRepository(CategoryRepository):
         return Category(
             id=model.id,
             name=model.name,
+            slug=model.slug,
             description=model.description,
             parent_id=model.parent_id,
         )
@@ -69,6 +71,7 @@ class PostgresCategoryRepository(CategoryRepository):
 
         return Category(
             id=model.id,
+            slug=model.slug,
             name=model.name,
             description=model.description,
             parent_id=model.parent_id,
@@ -94,6 +97,7 @@ class PostgresCategoryRepository(CategoryRepository):
         return Category(
             id=model.id,
             name=model.name,
+            slug=model.slug,
             description=model.description,
             parent_id=model.parent_id,
         )
@@ -117,6 +121,7 @@ class PostgresCategoryRepository(CategoryRepository):
             Category(
                 id=model.id,
                 name=model.name,
+                slug=model.slug,
                 description=model.description,
                 parent_id=model.parent_id,
             )
@@ -157,6 +162,7 @@ class PostgresCategoryRepository(CategoryRepository):
             Category(
                 id=model.id,
                 name=model.name,
+                slug=model.slug,
                 description=model.description,
                 parent_id=model.parent_id,
             )
@@ -181,14 +187,15 @@ class PostgresCategoryRepository(CategoryRepository):
             raise ValueError(f"Category with ID {category.id} not found")
 
         model.name = category.name
+        model.slug = category.slug
         model.description = category.description
         model.parent_id = category.parent_id
-
         await self.session.flush()
 
         return Category(
             id=model.id,
             name=model.name,
+            slug=model.slug,
             description=model.description,
             parent_id=model.parent_id,
         )

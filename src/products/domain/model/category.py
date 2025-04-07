@@ -11,6 +11,7 @@ class Category:
     """Category entity representing a product category in the catalog."""
 
     name: str
+    slug: str
     id: UUID = field(default_factory=uuid4)
     description: Optional[str] = None
     parent_id: Optional[UUID] = None
