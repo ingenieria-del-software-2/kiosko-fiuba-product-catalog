@@ -199,9 +199,6 @@ def test_create_product_success(
     sample_product_request: Dict[str, Any],
 ) -> None:
     """Test successfully creating a product."""
-    # TODO: Fix this test properly
-    assert True
-    """
     response = client.post("/api/products/", json=sample_product_request)
 
     # Verify the response
@@ -209,7 +206,6 @@ def test_create_product_success(
     data = response.json()
     assert data["name"] == sample_product_dto.name
     assert float(data["price"]) == float(sample_product_dto.price)
-    """
 
 
 def test_list_products(
@@ -217,9 +213,6 @@ def test_list_products(
     sample_product_dto: ProductResponseDTO,
 ) -> None:
     """Test listing products with pagination."""
-    # TODO: Fix this test properly
-    assert True
-    """
     response = client.get("/api/products/?limit=10&offset=0")
 
     # Verify the response
@@ -229,7 +222,6 @@ def test_list_products(
     assert "total" in data
     assert len(data["items"]) == 1  # We're mocking a list with a single product
     assert data["items"][0]["name"] == sample_product_dto.name
-    """
 
 
 def test_get_products_by_category(
@@ -237,9 +229,6 @@ def test_get_products_by_category(
     sample_product_dto: ProductResponseDTO,
 ) -> None:
     """Test getting products by category."""
-    # TODO: Fix this test properly
-    assert True
-    """
     category_id = "92a1bf8a-cf99-4587-8afd-5df15be80352"  # Use a fixed UUID for testing
     response = client.get(f"/api/products/?category_id={category_id}")
 
@@ -250,7 +239,6 @@ def test_get_products_by_category(
     assert "total" in data
     assert len(data["items"]) == 1  # We're mocking a list with a single product
     assert data["items"][0]["name"] == sample_product_dto.name
-    """
 
 
 def test_get_product_success(
@@ -258,9 +246,6 @@ def test_get_product_success(
     sample_product_dto: ProductResponseDTO,
 ) -> None:
     """Test successfully getting a product by ID."""
-    # TODO: Fix this test properly
-    assert True
-    """
     product_id = str(sample_product_dto.id)
     response = client.get(f"/api/products/{product_id}")
 
@@ -269,22 +254,17 @@ def test_get_product_success(
     data = response.json()
     assert data["name"] == sample_product_dto.name
     assert float(data["price"]) == float(sample_product_dto.price)
-    """
 
 
 def test_get_product_not_found(
     client: TestClient,
 ) -> None:
     """Test getting a non-existent product."""
-    # TODO: Fix this test properly
-    assert True
-    """
     product_id = "00000000-0000-0000-0000-000000000000"
     response = client.get(f"/api/products/{product_id}")
 
     # Verify the response
     assert response.status_code == 404
-    """
 
 
 @pytest.fixture
@@ -299,9 +279,6 @@ def test_update_product_success(
     sample_product_update_request: Dict[str, Any],
 ) -> None:
     """Test successfully updating a product."""
-    # TODO: Fix this test properly
-    assert True
-    """
     product_id = str(sample_product_dto.id)
     response = client.put(
         f"/api/products/{product_id}",
@@ -313,7 +290,6 @@ def test_update_product_success(
     data = response.json()
     assert data["name"] == sample_product_dto.name
     assert float(data["price"]) == float(sample_product_dto.price)
-    """
 
 
 def test_update_product_not_found(
@@ -321,9 +297,6 @@ def test_update_product_not_found(
     sample_product_update_request: Dict[str, Any],
 ) -> None:
     """Test updating a non-existent product."""
-    # TODO: Fix this test properly
-    assert True
-    """
     product_id = "00000000-0000-0000-0000-000000000000"
     response = client.put(
         f"/api/products/{product_id}",
@@ -332,7 +305,6 @@ def test_update_product_not_found(
 
     # Verify the response
     assert response.status_code == 404
-    """
 
 
 def test_delete_product_success(
@@ -340,28 +312,20 @@ def test_delete_product_success(
     sample_product_dto: ProductResponseDTO,
 ) -> None:
     """Test successfully deleting a product."""
-    # TODO: Fix this test properly
-    assert True
-    """
     product_id = str(sample_product_dto.id)
     response = client.delete(f"/api/products/{product_id}")
 
     # Verify the response
     assert response.status_code == 204
     assert response.content == b""  # No content
-    """
 
 
 def test_delete_product_not_found(
     client: TestClient,
 ) -> None:
     """Test deleting a non-existent product."""
-    # TODO: Fix this test properly
-    assert True
-    """
     product_id = "00000000-0000-0000-0000-000000000000"
     response = client.delete(f"/api/products/{product_id}")
 
     # Verify the response
     assert response.status_code == 404
-    """

@@ -12,6 +12,7 @@ from src.products.application.dtos.product_dtos import (
     ProductResponseDTO,
     ProductUpdateDTO,
 )
+from src.products.application.dtos.slugify_helper import slugify
 from src.products.application.services.product_service import ProductService
 from src.products.domain.exceptions.domain_exceptions import ProductNotFoundError
 from src.products.infrastructure.repositories.postgresql.category_repository import (
@@ -166,8 +167,6 @@ async def update_product(
     # Convert camelCase to snake_case for fields that need adjustment
     # Ensure slug is set
     if not product_data.slug and product_data.name:
-        from python_slugify import slugify
-
         product_data.slug = slugify(product_data.name)
     if hasattr(product_data, "compareAtPrice"):
         product_data.compare_at_price = product_data.compareAtPrice  # type: ignore

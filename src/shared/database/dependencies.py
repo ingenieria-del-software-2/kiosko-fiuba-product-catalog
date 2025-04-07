@@ -23,27 +23,33 @@ async def get_db_session(request: Request) -> AsyncGenerator[AsyncSession, None]
     Yields:
         Database session
     """
+    session = None
     try:
         # First try to get session from app state
         try:
-            session: AsyncSession = request.app.state.db_session_factory()
+            session_factory = request.app.state.db_session_factory
+            session = session_factory()
         except (AttributeError, KeyError):
             # Fall back to creating a new session if not in app state
             session_factory = get_session_factory()
             session = session_factory()
 
-        try:
-            await session.execute(
-                text("SET statement_timeout = 10000"),
-            )  # 10 seconds timeout
-            yield session
-        finally:
-            await session.commit()
-            await session.close()
+        await session.execute(
+            text("SET statement_timeout = 10000"),
+        )  # 10 seconds timeout
+
+        yield session
+
+        await session.commit()
     except Exception as e:
         # Log the error but don't expose details to client
         logger.error(f"Database session error: {e!s}")
+        if session:
+            await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database connection error",
         ) from e
+    finally:
+        if session:
+            await session.close()
