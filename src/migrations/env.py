@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.future import Connection
 
 from src.shared.database.base import Base
-from src.shared.database.models import load_all_models
+from src.shared.database.model_loader import load_all_models
 from src.settings import settings
 
 # this is the Alembic Config object, which provides

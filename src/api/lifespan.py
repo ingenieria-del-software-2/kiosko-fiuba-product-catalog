@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from src.settings import settings
-from src.shared.database.models import load_all_models
+from src.shared.database.model_loader import load_all_models
 
 
 def _setup_db(app: FastAPI) -> None:
