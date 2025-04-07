@@ -1,10 +1,11 @@
 """PostgreSQL product repository implementation."""
 
+import logging
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, column, func, insert, or_, select, table
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -47,13 +48,21 @@ class PostgreSQLProductRepository(ProductRepository):
         Returns:
             Created product entity
         """
+        import logging
+
+        logger = logging.getLogger(__name__)
+
         # Create the product model
         product_model = ProductModel(
             name=product_dto.name,
             slug=product_dto.slug,
             description=product_dto.description,
             summary=product_dto.summary,
-            price_amount=product_dto.price,
+            price_amount=(
+                product_dto.price_amount
+                if hasattr(product_dto, "price_amount")
+                else product_dto.price
+            ),
             price_currency=product_dto.currency,
             compare_at_price=product_dto.compare_at_price,
             brand_id=product_dto.brand_id,
@@ -74,96 +83,163 @@ class PostgreSQLProductRepository(ProductRepository):
 
         self._session.add(product_model)
 
-        # Add categories
-        categories: List[CategoryModel] = []
-        if product_dto.category_ids:
-            stmt = select(CategoryModel).where(
-                CategoryModel.id.in_(product_dto.category_ids),
+        try:
+            # Flush to get product ID first - crucial for avoiding the greenlet error
+            await self._session.flush()
+
+            # Add categories if specified
+            if product_dto.category_ids:
+                await self._add_categories(product_model.id, product_dto.category_ids)
+
+            # Add images if specified
+            if product_dto.images:
+                await self._add_images(product_model.id, product_dto.images)
+
+            # Add variants if specified
+            if product_dto.variants:
+                await self._add_variants(
+                    product_model.id,
+                    product_dto.variants,
+                    product_dto.currency,
+                )
+
+            # Add config options if specified
+            if product_dto.config_options:
+                await self._add_config_options(
+                    product_model.id,
+                    product_dto.config_options,
+                )
+
+            # Ensure all data is saved
+            await self._session.flush()
+
+            # Reload the product with all relationships to avoid lazy loading issues
+            stmt = (
+                select(ProductModel)
+                .options(
+                    selectinload(ProductModel.categories),
+                    selectinload(ProductModel.images),
+                    selectinload(ProductModel.variants).selectinload(
+                        ProductVariantModel.images,
+                    ),
+                    joinedload(ProductModel.brand),
+                )
+                .where(ProductModel.id == product_model.id)
             )
-            categories = (await self._session.execute(stmt)).scalars().all()
-            product_model.categories = categories
 
-        # Flush to get product ID
-        await self._session.flush()
+            result = await self._session.execute(stmt)
+            product_model = result.scalars().first()
 
-        # Add images after the product has an ID
-        product_images = []
-        if product_dto.images:
-            for image_data in product_dto.images:
-                image = ProductImageModel(
-                    product_id=product_model.id,  # Set product_id explicitly
-                    url=image_data["url"],
-                    alt=image_data.get("alt"),
-                    is_main=image_data.get("isMain", False),
-                    order=image_data.get("order", 0),
-                )
-                self._session.add(image)
-                product_images.append(image)
+            # Convert to domain entity
+            return await self._to_domain_entity(product_model)
 
-        # Add variants
-        if product_dto.variants:
-            for variant_data in product_dto.variants:
-                variant = ProductVariantModel(
-                    parent_product_id=product_model.id,  # Parent product reference
-                    name=variant_data["name"],
-                    sku=variant_data["sku"],
-                    price_amount=variant_data["price"],
-                    price_currency=product_dto.currency,
-                    compare_at_price=variant_data.get("compare_at_price"),
-                    stock=variant_data.get("stock", 0),
-                    is_available=variant_data.get("is_available", True),
-                    is_selected=variant_data.get("is_selected", False),
-                    attributes=variant_data.get("attributes", {}),
-                )
-                self._session.add(variant)
+        except Exception as e:
+            logger.error(f"Error creating product: {e!s}", exc_info=True)
+            raise
 
-                # Flush to get variant ID
-                await self._session.flush()
+    async def _add_categories(
+        self,
+        product_id: uuid.UUID,
+        category_ids: List[uuid.UUID],
+    ) -> None:
+        """Add categories to a product using direct table operations to avoid ll."""
+        # First, verify categories exist
+        stmt = select(CategoryModel.id).where(CategoryModel.id.in_(category_ids))
+        result = await self._session.execute(stmt)
+        found_category_ids = [row[0] for row in result]
 
-                # Add variant images if they exist
-                if variant_data.get("images"):
-                    for v_image_data in variant_data["images"]:
-                        v_image = ProductImageModel(
-                            product_id=product_model.id,  # Set product_id explicitly
-                            variant_id=variant.id,  # Set variant_id explicitly
-                            url=v_image_data["url"],
-                            alt=v_image_data.get("alt"),
-                            is_main=v_image_data.get("isMain", False),
-                            order=v_image_data.get("order", 0),
-                        )
-                        self._session.add(v_image)
-
-        # Add config options
-        if product_dto.config_options:
-            for config_data in product_dto.config_options:
-                config = ConfigOptionModel(
-                    product_id=product_model.id,  # Set product_id explicitly
-                    name=config_data["name"],
-                    values=config_data["values"],
-                )
-                self._session.add(config)
-
-        # Ensure all data is saved to the database
-        await self._session.flush()
-
-        # Reload product with relationships to avoid lazy loading issues
-        stmt = (
-            select(ProductModel)
-            .options(
-                selectinload(ProductModel.categories),
-                selectinload(ProductModel.images),
-                selectinload(ProductModel.variants).selectinload(
-                    ProductVariantModel.images,
-                ),
-                joinedload(ProductModel.brand),
-            )
-            .where(ProductModel.id == product_model.id)
+        # Insert directly into the association table
+        product_categories_table = table(
+            "product_categories",
+            column("product_id"),
+            column("category_id"),
         )
 
-        result = await self._session.execute(stmt)
-        product_model = result.scalars().first()
+        for category_id in found_category_ids:
+            insert_stmt = insert(product_categories_table).values(
+                product_id=product_id,
+                category_id=category_id,
+            )
+            await self._session.execute(insert_stmt)
 
-        return await self._to_domain_entity(product_model)
+        await self._session.flush()
+
+    async def _add_images(self, product_id: uuid.UUID, images_data: List[Dict]) -> None:
+        """Add images to a product."""
+        for image_data in images_data:
+            image = ProductImageModel(
+                product_id=product_id,
+                url=image_data["url"],
+                alt=image_data.get("alt"),
+                is_main=image_data.get("isMain", False),
+                order=image_data.get("order", 0),
+            )
+            self._session.add(image)
+
+    async def _add_variants(
+        self,
+        product_id: uuid.UUID,
+        variants_data: List[Dict],
+        currency: str,
+    ) -> None:
+        """Add variants to a product."""
+        for variant_data in variants_data:
+            variant = ProductVariantModel(
+                parent_product_id=product_id,
+                name=variant_data["name"],
+                sku=variant_data["sku"],
+                price_amount=variant_data["price"],
+                price_currency=currency,
+                compare_at_price=variant_data.get("compare_at_price"),
+                stock=variant_data.get("stock", 0),
+                is_available=variant_data.get("is_available", True),
+                is_selected=variant_data.get("is_selected", False),
+                attributes=variant_data.get("attributes", {}),
+            )
+            self._session.add(variant)
+
+            # Flush to get variant ID
+            await self._session.flush()
+
+            # Add variant images if they exist
+            if variant_data.get("images"):
+                await self._add_variant_images(
+                    product_id,
+                    variant.id,
+                    variant_data["images"],
+                )
+
+    async def _add_variant_images(
+        self,
+        product_id: uuid.UUID,
+        variant_id: uuid.UUID,
+        images_data: List[Dict],
+    ) -> None:
+        """Add images to a product variant."""
+        for image_data in images_data:
+            image = ProductImageModel(
+                product_id=product_id,
+                variant_id=variant_id,
+                url=image_data["url"],
+                alt=image_data.get("alt"),
+                is_main=image_data.get("isMain", False),
+                order=image_data.get("order", 0),
+            )
+            self._session.add(image)
+
+    async def _add_config_options(
+        self,
+        product_id: uuid.UUID,
+        config_options_data: List[Dict],
+    ) -> None:
+        """Add configuration options to a product."""
+        for config_data in config_options_data:
+            config = ConfigOptionModel(
+                product_id=product_id,
+                name=config_data["name"],
+                values=config_data["values"],
+            )
+            self._session.add(config)
 
     async def get_by_id(self, product_id: uuid.UUID) -> Optional[Product]:
         """Get a product by its ID.
@@ -740,57 +816,12 @@ class PostgreSQLProductRepository(ProductRepository):
         """Convert a ProductModel to a Product domain entity.
 
         Args:
-            model: ProductModel instance
+            model: SQL Alchemy model
 
         Returns:
-            Product domain entity
+            Domain entity
         """
-        # Prepare data dictionaries for relationships without lazy loading
-        categories_data = []
-        # Don't use hasattr, use getattr with default value to avoid lazy loading
-        categories = getattr(model, "categories", None)
-        if categories is not None:
-            for category in categories:
-                categories_data.append(
-                    {
-                        "id": category.id,
-                        "name": category.name,
-                        "slug": category.slug,
-                        "description": category.description,
-                    },
-                )
-
-        images_data = []
-        # Don't use hasattr, use getattr with default value to avoid lazy loading
-        images = getattr(model, "images", None)
-        if images is not None:
-            for image in images:
-                images_data.append(
-                    {
-                        "id": image.id,
-                        "url": image.url,
-                        "alt": image.alt,
-                        "is_main": image.is_main,
-                        "order": image.order,
-                    },
-                )
-
-        brand_data = None
-        # Don't use hasattr, use getattr with default value to avoid lazy loading
-        brand = getattr(model, "brand", None)
-        if brand is not None:
-            brand_data = {
-                "id": brand.id,
-                "name": brand.name,
-                "logo": brand.logo,
-                "description": brand.description,
-            }
-
-        reviews_data: List[Dict[str, Any]] = []
-        # Skip reviews altogether if not explicitly loaded
-        # Don't use hasattr or getattr which would trigger lazy loading
-
-        # Build product data dictionary with extracted data
+        # Prepare all data for the domain entity
         product_data = {
             "id": model.id,
             "name": model.name,
@@ -802,26 +833,57 @@ class PostgreSQLProductRepository(ProductRepository):
                 float(model.compare_at_price) if model.compare_at_price else None
             ),
             "currency": model.price_currency,
-            "brand": brand_data,
-            "model": model.model,
             "sku": model.sku,
             "stock": model.stock,
             "is_available": model.is_available,
             "is_new": model.is_new,
             "is_refurbished": model.is_refurbished,
             "condition": model.condition,
-            "categories": categories_data,
-            "tags": model.tags,
-            "images": images_data,
-            "attributes": model.attributes,
+            "model": model.model,
             "has_variants": model.has_variants,
-            "highlighted_features": model.highlighted_features,
-            "reviews": reviews_data,
+            "tags": model.tags or [],
+            "attributes": model.attributes or [],
+            "highlighted_features": model.highlighted_features or [],
+            "shipping": model.shipping,
+            "warranty": model.warranty,
             "created_at": model.created_at,
             "updated_at": model.updated_at,
         }
 
-        return Product(**product_data)
+        # Process relationships
+        if hasattr(model, "categories") and model.categories:
+            product_data["categories"] = self._prepare_categories(model.categories)
+
+        if hasattr(model, "images") and model.images:
+            # Get only product-level images (not variant images)
+            product_images = [img for img in model.images if img.variant_id is None]
+            if product_images:
+                product_data["images"] = self._prepare_images(product_images)
+
+        if hasattr(model, "variants") and model.variants:
+            product_data["variants"] = self._prepare_variants(model.variants)
+
+        if hasattr(model, "config_options") and model.config_options:
+            product_data["config_options"] = self._prepare_config_options(
+                model.config_options,
+            )
+
+        if hasattr(model, "brand") and model.brand:
+            product_data["brand"] = self._prepare_brand(model.brand)
+
+        if hasattr(model, "reviews") and model.reviews:
+            product_data["reviews"] = self._prepare_reviews(model.reviews)
+
+        try:
+            # Create domain entity from prepared data
+            return Product(**product_data)
+        except Exception as e:
+            logger = logging.getLogger(__name__)
+            logger.error(
+                f"Error creating Product domain entity: {e!s}",
+                exc_info=True,
+            )
+            raise
 
     def _prepare_categories(
         self,

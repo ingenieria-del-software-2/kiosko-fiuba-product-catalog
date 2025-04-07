@@ -1,7 +1,8 @@
 """Product service for application layer."""
 
+import logging
 import uuid
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from src.products.application.dtos.product_dtos import (
     ProductCreateDTO,
@@ -13,6 +14,8 @@ from src.products.domain.entities.product import Product
 from src.products.domain.event_publisher.event_publisher import EventPublisher
 from src.products.domain.repositories.category_repository import CategoryRepository
 from src.products.domain.repositories.product_repository import ProductRepository
+
+logger = logging.getLogger(__name__)
 
 
 class ProductService:
@@ -47,21 +50,27 @@ class ProductService:
         Returns:
             DTO with created product data
         """
-        product = await self._product_repository.create(product_data)
+        try:
+            # Create product using repository
+            product = await self._product_repository.create(product_data)
 
-        # Publish event if event_publisher is provided
-        if self._event_publisher:
-            from src.products.domain.events.events import ProductCreatedEvent
+            # Publish event if event_publisher is provided
+            if self._event_publisher:
+                from src.products.domain.events.events import ProductCreatedEvent
 
-            event = ProductCreatedEvent(
-                event_id=uuid.uuid4(),
-                event_type="product.created",
-                aggregate_id=product.id,
-                product_data={"product_id": str(product.id)},
-            )
-            await self._event_publisher.publish(event)
+                event = ProductCreatedEvent(
+                    event_id=uuid.uuid4(),
+                    event_type="product.created",
+                    aggregate_id=product.id,
+                    product_data={"product_id": str(product.id)},
+                )
+                await self._event_publisher.publish(event)
 
-        return self._to_response_dto(product)
+            # Convert to response DTO
+            return self._to_response_dto(product)
+        except Exception as e:
+            logger.error(f"Error creating product: {e!s}", exc_info=True)
+            raise
 
     async def get_product_by_id(
         self,
@@ -75,12 +84,17 @@ class ProductService:
         Returns:
             DTO with product data or None if not found
         """
-        product = await self._product_repository.get_by_id(product_id)
-
-        if not product:
-            return None
-
-        return self._to_response_dto(product)
+        try:
+            product = await self._product_repository.get_by_id(product_id)
+            if not product:
+                return None
+            return self._to_response_dto(product)
+        except Exception as e:
+            logger.error(
+                f"Error getting product by ID {product_id}: {e!s}",
+                exc_info=True,
+            )
+            raise
 
     async def get_product_by_sku(self, sku: str) -> Optional[ProductResponseDTO]:
         """Get a product by its SKU.
@@ -91,12 +105,14 @@ class ProductService:
         Returns:
             DTO with product data or None if not found
         """
-        product = await self._product_repository.get_by_sku(sku)
-
-        if not product:
-            return None
-
-        return self._to_response_dto(product)
+        try:
+            product = await self._product_repository.get_by_sku(sku)
+            if not product:
+                return None
+            return self._to_response_dto(product)
+        except Exception as e:
+            logger.error(f"Error getting product by SKU {sku}: {e!s}", exc_info=True)
+            raise
 
     async def update_product(
         self,
@@ -112,12 +128,17 @@ class ProductService:
         Returns:
             DTO with updated product data or None if not found
         """
-        product = await self._product_repository.update(product_id, product_data)
-
-        if not product:
-            return None
-
-        return self._to_response_dto(product)
+        try:
+            product = await self._product_repository.update(product_id, product_data)
+            if not product:
+                return None
+            return self._to_response_dto(product)
+        except Exception as e:
+            logger.error(
+                f"Error updating product {product_id}: {e!s}",
+                exc_info=True,
+            )
+            raise
 
     async def delete_product(self, product_id: uuid.UUID) -> bool:
         """Delete a product.
@@ -128,7 +149,14 @@ class ProductService:
         Returns:
             True if deleted, False if not found
         """
-        return await self._product_repository.delete(product_id)
+        try:
+            return await self._product_repository.delete(product_id)
+        except Exception as e:
+            logger.error(
+                f"Error deleting product {product_id}: {e!s}",
+                exc_info=True,
+            )
+            raise
 
     async def list_products(
         self,
@@ -142,8 +170,12 @@ class ProductService:
         Returns:
             List of DTOs with product data and total count
         """
-        products, total = await self._product_repository.list(filters)
-        return [self._to_response_dto(product) for product in products], total
+        try:
+            products, total = await self._product_repository.list(filters)
+            return [self._to_response_dto(product) for product in products], total
+        except Exception as e:
+            logger.error(f"Error listing products: {e!s}", exc_info=True)
+            raise
 
     def _to_response_dto(self, product: Product) -> ProductResponseDTO:
         """Convert a Product entity to a ProductResponseDTO.
@@ -154,6 +186,110 @@ class ProductService:
         Returns:
             DTO with product data
         """
-        # Convert to dictionary and then to DTO to handle nested structures
+        # Convert to dictionary and prepare data
         product_dict = product.model_dump()
-        return ProductResponseDTO(**product_dict)
+
+        # Process UUIDs and add missing IDs
+        self._convert_product_uuids(product_dict)
+
+        # Create the DTO with the processed dictionary
+        try:
+            return ProductResponseDTO(**product_dict)
+        except Exception as e:
+            logger.error(f"Error creating ProductResponseDTO: {e!s}", exc_info=True)
+            return ProductResponseDTO(**product_dict)
+
+    def _convert_product_uuids(self, data: Dict) -> None:
+        """Convert UUIDs to strings in the product dictionary.
+
+        Args:
+            data: Product dictionary to process
+        """
+        # Convert product ID
+        if isinstance(data.get("id"), uuid.UUID):
+            data["id"] = str(data["id"])
+
+        # Convert brand ID if present
+        if data.get("brand") and isinstance(data["brand"].get("id"), uuid.UUID):
+            data["brand"]["id"] = str(data["brand"]["id"])
+
+        # Process categories
+        if data.get("categories"):
+            self._process_categories(data["categories"])
+
+        # Process images
+        if data.get("images"):
+            self._process_images(data["images"])
+
+        # Process variants
+        if data.get("variants"):
+            self._process_variants(data["variants"])
+
+        # Process attributes
+        if data.get("attributes"):
+            self._process_attributes(data["attributes"])
+
+        # Process config options
+        if data.get("config_options"):
+            self._process_config_options(data["config_options"])
+
+    def _process_categories(self, categories: List[Dict]) -> None:
+        """Process category UUIDs.
+
+        Args:
+            categories: List of category dictionaries
+        """
+        for category in categories:
+            if isinstance(category.get("id"), uuid.UUID):
+                category["id"] = str(category["id"])
+            if isinstance(category.get("parentId"), uuid.UUID):
+                category["parentId"] = str(category["parentId"])
+
+    def _process_images(self, images: List[Dict]) -> None:
+        """Process image UUIDs.
+
+        Args:
+            images: List of image dictionaries
+        """
+        for image in images:
+            if isinstance(image.get("id"), uuid.UUID):
+                image["id"] = str(image["id"])
+
+    def _process_variants(self, variants: List[Dict]) -> None:
+        """Process variant UUIDs and their nested structures.
+
+        Args:
+            variants: List of variant dictionaries
+        """
+        for variant in variants:
+            if isinstance(variant.get("id"), uuid.UUID):
+                variant["id"] = str(variant["id"])
+
+            # Process variant images if present
+            if variant.get("images"):
+                self._process_images(variant["images"])
+
+    def _process_attributes(self, attributes: List[Dict]) -> None:
+        """Process attribute UUIDs and add missing IDs.
+
+        Args:
+            attributes: List of attribute dictionaries
+        """
+        for i, attr in enumerate(attributes):
+            if isinstance(attr, dict):
+                # Add ID if missing
+                if "id" not in attr:
+                    attr["id"] = f"attr_{i}_{uuid.uuid4()}"
+                # Convert ID if it's a UUID
+                elif isinstance(attr["id"], uuid.UUID):
+                    attr["id"] = str(attr["id"])
+
+    def _process_config_options(self, config_options: List[Dict]) -> None:
+        """Process config option UUIDs.
+
+        Args:
+            config_options: List of config option dictionaries
+        """
+        for option in config_options:
+            if isinstance(option.get("id"), uuid.UUID):
+                option["id"] = str(option["id"])
