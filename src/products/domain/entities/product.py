@@ -143,11 +143,21 @@ class Product(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    class Config:
-        """Pydantic config."""
+    model_config = {
+        "arbitrary_types_allowed": True,
+    }
 
-        arbitrary_types_allowed = True
-        json_encoders: ClassVar[Dict[type, Any]] = {
-            uuid.UUID: str,
-            datetime: lambda v: v.isoformat(),
-        }
+    # Define model_serialization_config for custom serializers
+    @classmethod
+    def model_serializer(cls, obj: "Product") -> dict:
+        """Custom serializer for the model."""
+        data = obj.__dict__.copy()
+        # Convert UUID to string
+        if isinstance(data.get("id"), uuid.UUID):
+            data["id"] = str(data["id"])
+        # Convert datetime to ISO format
+        if isinstance(data.get("created_at"), datetime):
+            data["created_at"] = data["created_at"].isoformat()
+        if isinstance(data.get("updated_at"), datetime):
+            data["updated_at"] = data["updated_at"].isoformat()
+        return data

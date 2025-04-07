@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Type, Callable, ClassVar
 
-from pydantic import BaseModel, RootModel, validator
+from pydantic import BaseModel, RootModel, ConfigDict, field_validator, ValidationInfo
 
 
 class BrandDTO(BaseModel):
@@ -234,14 +234,23 @@ class ProductResponseDTO(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
-    class Config:
-        """Pydantic config."""
+    model_config = ConfigDict(
+        populate_by_name=True,
+    )
 
-        populate_by_name = True
-        json_encoders = {
-            uuid.UUID: str,
-            datetime: lambda v: v.isoformat(),
-        }
+    @classmethod
+    def model_serializer(cls, obj: "ProductResponseDTO") -> dict:
+        """Custom serializer for the model."""
+        data = obj.__dict__.copy()
+        # Convert UUID to string
+        if isinstance(data.get("id"), uuid.UUID):
+            data["id"] = str(data["id"])
+        # Convert datetime to ISO format
+        if isinstance(data.get("created_at"), datetime):
+            data["created_at"] = data["created_at"].isoformat()
+        if isinstance(data.get("updated_at"), datetime):
+            data["updated_at"] = data["updated_at"].isoformat()
+        return data
 
 
 class ProductCreateDTO(BaseModel):
@@ -274,12 +283,14 @@ class ProductCreateDTO(BaseModel):
     warranty: Optional[Dict[str, Any]] = None
     highlightedFeatures: Optional[List[str]] = None
 
-    @validator("slug", pre=True, always=True)
-    def set_slug(self, v: Optional[str], values: Dict[str, Any]) -> str:
+    @field_validator("slug", mode="before")
+    @classmethod
+    def set_slug(cls, v: Optional[str], info: ValidationInfo) -> str:
         """Set slug from name if not provided."""
-        if not v and "name" in values:
+        if not v and "name" in info.data:
             from slugify import slugify
-            return str(slugify(values["name"]))
+
+            return str(slugify(info.data["name"]))
         return v if v is not None else ""
 
 
@@ -320,10 +331,7 @@ class ProductUpdateDTO(BaseModel):
     highlightedFeatures: Optional[List[str]] = None
     highlighted_features: Optional[List[str]] = None
 
-    class Config:
-        """Pydantic config."""
-
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class BrandCreateDTO(BaseModel):
@@ -350,12 +358,14 @@ class CategoryCreateDTO(BaseModel):
     description: Optional[str] = None
     parent_id: Optional[uuid.UUID] = None
 
-    @validator("slug", pre=True, always=True)
-    def set_slug(self, v: Optional[str], values: Dict[str, Any]) -> str:
+    @field_validator("slug", mode="before")
+    @classmethod
+    def set_slug(cls, v: Optional[str], info: ValidationInfo) -> str:
         """Set slug from name if not provided."""
-        if not v and "name" in values:
+        if not v and "name" in info.data:
             from slugify import slugify
-            return str(slugify(values["name"]))
+
+            return str(slugify(info.data["name"]))
         return v if v is not None else ""
 
 

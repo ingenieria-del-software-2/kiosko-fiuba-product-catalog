@@ -11,7 +11,7 @@ from src.products.application.dtos.product_dtos import (
     ProductResponseDTO,
 )
 from src.products.application.services.product_service import ProductService
-from src.products.domain.model.product import Product
+from src.products.domain.entities.product import Product
 from src.products.domain.model.value_objects import Money
 
 
@@ -34,13 +34,37 @@ async def test_product_service_create() -> None:
     product = Product(
         id=product_id,
         name="Test Product",
+        slug="test-product",
         description="This is a test product",
-        price=Money(amount=Decimal("99.99"), currency="USD"),
-        category_id=category_id,
+        price=99.99,
+        currency="USD",
         sku="TEST-SKU-123",
-        images=["http://example.com/image1.jpg"],
+        images=[
+            {
+                "id": "img1",
+                "url": "http://example.com/image1.jpg",
+                "alt": "Test Image 1",
+                "isMain": True,
+                "order": 0,
+            }
+        ],
         tags=["test", "sample"],
-        attributes={"color": "red", "size": "medium"},
+        attributes=[
+            {
+                "id": "attr1",
+                "name": "color",
+                "value": "red",
+                "displayValue": "Red",
+                "isHighlighted": False,
+            },
+            {
+                "id": "attr2",
+                "name": "size",
+                "value": "medium",
+                "displayValue": "Medium",
+                "isHighlighted": False,
+            },
+        ],
     )
     product_repo.create.return_value = product
 
@@ -59,9 +83,29 @@ async def test_product_service_create() -> None:
         currency="USD",
         category_id=category_id,
         sku="TEST-SKU-123",
-        images=["http://example.com/image1.jpg"],
+        images=[
+            {
+                "url": "http://example.com/image1.jpg",
+                "alt": "Test Image 1",
+                "isMain": True,
+                "order": 0,
+            }
+        ],
         tags=["test", "sample"],
-        attributes={"color": "red", "size": "medium"},
+        attributes=[
+            {
+                "name": "color",
+                "value": "red",
+                "displayValue": "Red",
+                "isHighlighted": False,
+            },
+            {
+                "name": "size",
+                "value": "medium",
+                "displayValue": "Medium",
+                "isHighlighted": False,
+            },
+        ],
     )
 
     # Call the service method
