@@ -966,8 +966,35 @@ class PostgreSQLProductRepository(ProductRepository):
         logger = logging.getLogger(__name__)
         logger.debug(f"Converting model to domain entity: {model.id}")
 
-        # Prepare all data without triggering lazy loading
-        product_data = {
+        # Prepare base product data
+        product_data = self._prepare_base_product_data(model)
+
+        # Process relationships
+        self._process_brand_info(model, product_data, logger)
+        self._process_categories(model, product_data, logger)
+        self._process_images(model, product_data, logger)
+        self._process_variants(model, product_data, logger)
+
+        try:
+            # Create domain entity from prepared data
+            return Product(**product_data)
+        except Exception as e:
+            logger.error(
+                f"Error creating Product domain entity: {e!s}",
+                exc_info=True,
+            )
+            raise
+
+    def _prepare_base_product_data(self, model: ProductModel) -> Dict[str, Any]:
+        """Prepare the base product data dictionary.
+
+        Args:
+            model: Product model
+
+        Returns:
+            Dictionary with base product data
+        """
+        return {
             "id": model.id,
             "name": model.name,
             "slug": model.slug,
@@ -1000,7 +1027,19 @@ class PostgreSQLProductRepository(ProductRepository):
             "config_options": [],
         }
 
-        # Process brand information if available
+    def _process_brand_info(
+        self,
+        model: ProductModel,
+        product_data: Dict[str, Any],
+        logger: logging.Logger,
+    ) -> None:
+        """Process brand information for the product.
+
+        Args:
+            model: Product model
+            product_data: Product data dictionary to update
+            logger: Logger instance
+        """
         if hasattr(model, "brand") and model.brand is not None:
             try:
                 product_data["brand"] = {
@@ -1013,7 +1052,19 @@ class PostgreSQLProductRepository(ProductRepository):
                 logger.error(f"Error processing brand: {e!s}")
                 product_data["brand"] = None
 
-        # Process categories if available
+    def _process_categories(
+        self,
+        model: ProductModel,
+        product_data: Dict[str, Any],
+        logger: logging.Logger,
+    ) -> None:
+        """Process categories for the product.
+
+        Args:
+            model: Product model
+            product_data: Product data dictionary to update
+            logger: Logger instance
+        """
         if hasattr(model, "categories") and model.categories:
             try:
                 product_data["categories"] = self._prepare_categories(model.categories)
@@ -1021,7 +1072,19 @@ class PostgreSQLProductRepository(ProductRepository):
             except Exception as e:
                 logger.error(f"Error processing categories: {e!s}")
 
-        # Process images if available
+    def _process_images(
+        self,
+        model: ProductModel,
+        product_data: Dict[str, Any],
+        logger: logging.Logger,
+    ) -> None:
+        """Process images for the product.
+
+        Args:
+            model: Product model
+            product_data: Product data dictionary to update
+            logger: Logger instance
+        """
         if hasattr(model, "images") and model.images:
             try:
                 # Get only product-level images (not variant images)
@@ -1032,23 +1095,25 @@ class PostgreSQLProductRepository(ProductRepository):
             except Exception as e:
                 logger.error(f"Error processing images: {e!s}")
 
-        # Process variants if available
+    def _process_variants(
+        self,
+        model: ProductModel,
+        product_data: Dict[str, Any],
+        logger: logging.Logger,
+    ) -> None:
+        """Process variants for the product.
+
+        Args:
+            model: Product model
+            product_data: Product data dictionary to update
+            logger: Logger instance
+        """
         if hasattr(model, "variants") and model.variants:
             try:
                 product_data["variants"] = self._prepare_variants(model.variants)
                 logger.debug(f"Processed {len(model.variants)} variants")
             except Exception as e:
                 logger.error(f"Error processing variants: {e!s}")
-
-        try:
-            # Create domain entity from prepared data
-            return Product(**product_data)
-        except Exception as e:
-            logger.error(
-                f"Error creating Product domain entity: {e!s}",
-                exc_info=True,
-            )
-            raise
 
     def _prepare_categories(
         self,
