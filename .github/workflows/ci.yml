@@ -1,4 +1,4 @@
-name: Testing product_catalog
+name: CI
 
 on: push
 
