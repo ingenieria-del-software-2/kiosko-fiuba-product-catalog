@@ -1,8 +1,5 @@
 services:
   api: &main_app
-    build:
-      context: .
-      dockerfile: ./Dockerfile
     image: product_catalog:${PRODUCT_CATALOG_VERSION:-latest}
     restart: always
     env_file:
