@@ -1,20 +1,21 @@
 services:
   api: &main_app
     image: product_catalog:${PRODUCT_CATALOG_VERSION:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: always
     env_file:
       - .env
     labels:
-      # Enables traefik for this container.
       - traefik.enable=true
       - traefik.http.routers.product_catalog.rule=Host(`${PRODUCT_CATALOG_TRAEFIK_HOST:-product_catalog.localhost}`)
-      - traefik.http.routers.product_catalog.entrypoints=http
+      - traefik.http.routers.product_catalog.entrypoints=web
       - traefik.http.routers.product_catalog.service=product_catalog
       - traefik.http.services.product_catalog.loadbalancer.server.port=${PRODUCT_CATALOG_PORT:-8000}
     ports:
       - "8000:8000"
     networks:
-      - default
       - traefik-shared
     depends_on:
       db:
@@ -26,8 +27,7 @@ services:
       PRODUCT_CATALOG_DB_USER: product_catalog
       PRODUCT_CATALOG_DB_PASS: product_catalog
       PRODUCT_CATALOG_DB_BASE: product_catalog
-    volumes:
-      - ./src:/app/src
+      PRODUCT_CATALOG_RELOAD: "True"
 
   db:
     image: postgres:16.3-bullseye
@@ -60,14 +60,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    volumes:
-      - ./src:/app/src
 
 volumes:
   product-catalog-db-data:
     name: product-catalog-db-data
 
 networks:
-  # Network for traefik.
   traefik-shared:
     name: traefik-shared

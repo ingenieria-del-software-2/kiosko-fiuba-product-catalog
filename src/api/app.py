@@ -1,8 +1,9 @@
 """FastAPI application setup."""
 
+import os
+
 from fastapi import FastAPI
 from fastapi.responses import UJSONResponse
-import os
 
 from src.api.lifespan import lifespan
 from src.api.router import api_router
@@ -17,7 +18,7 @@ def get_app() -> FastAPI:
     :return: application.
     """
     api_path_prefix = os.getenv("API_PATH_PREFIX", "")
-    
+
     app = FastAPI(
         title="product_catalog",
         version="0.1.0",
