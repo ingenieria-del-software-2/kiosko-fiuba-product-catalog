@@ -47,7 +47,7 @@ class GunicornApplication(BaseApplication):
         self.options = {
             "bind": f"{host}:{port}",
             "workers": workers,
-            "worker_class": "product_catalog.gunicorn_runner.UvicornWorker",
+            "worker_class": "src.gunicorn_runner.UvicornWorker",
             **kwargs,
         }
         self.app = app
